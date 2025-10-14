@@ -24,7 +24,20 @@
         </div>
     </div>
 
-
+        <!-- Branches -->
+    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <span class="label label-success pull-right">Branches</span>
+                <h5 class="text-ellipsis">Branches</h5>
+            </div>
+            <div class="ibox-content">
+                <h3 class="no-margins">{{$branch->branches_count()}}</h3>
+                <div class="stat-percent font-bold text-success">{{$branch->branches_count()}}<i class="fa fa-bolt"></i></div>
+                <a href="{{Route('branches.index')}}"><small>Branches</small></a>
+            </div>
+        </div>
+    </div>
 </div>
 
 

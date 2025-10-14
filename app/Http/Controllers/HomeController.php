@@ -24,6 +24,7 @@ class HomeController extends Controller
     public function index()
 {
     $data['user'] = new UsersController; 
+    $data['branch'] = new BranchController; 
     /*$data['supplier'] = new SupplierController;
     $data['product'] = new ProductController;
     $data['purchase'] = new PurchaseController;

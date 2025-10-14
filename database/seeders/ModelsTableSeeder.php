@@ -19,6 +19,8 @@ class ModelsTableSeeder extends Seeder
             ['id' => 4, 'name' => 'Email', 'friendly' => 'Manage Emails'], 
             ['id' => 5, 'name' => 'Status', 'friendly' => 'Manage Statuses'], 
             ['id' => 6, 'name' => 'Paymentmode', 'friendly' => 'Manage Payment Modes'], 
+            ['id' => 7, 'name' => 'Branch', 'friendly' => 'Manage Branches'],
+            ['id' => 8, 'name' => 'Parcel', 'friendly' => 'Manage Parcels'],
           
 
 
