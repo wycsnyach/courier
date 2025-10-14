@@ -44,6 +44,9 @@ Route::group( ['middleware' => 'auth' ], function()
     Route::resource('paymentmodes',  App\Http\Controllers\PaymentmodeController::class);
     Route::resource('departments',  App\Http\Controllers\DepartmentController::class);
     Route::resource('productcategories',  App\Http\Controllers\ProductcategoryController::class);
+
+    Route::resource('branches',  App\Http\Controllers\BranchController::class);
+    Route::resource('parcels',  App\Http\Controllers\ParcelController::class);
     
      /*Data Uploads Start*/
 

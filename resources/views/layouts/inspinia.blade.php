@@ -55,6 +55,21 @@
 
 
 
+                @if(Bouncer::can('Create_Branch')) 
+
+                <li class="{{ Request::is('branches*') ? 'active' : '' }}">
+                    <a href="{{url('branches')}}"><i class="fa fa-building-o" style="color:#1AB394" aria-hidden="true"></i> <span class="nav-label">Branches</span></a>
+                </li>
+                @endif
+                @if(Bouncer::can('Create_Parcel')) 
+
+                <li class="{{ Request::is('parcels*') ? 'active' : '' }}">
+                    <a href="{{url('parcels')}}"><i class="fa fa-envelope-open" style="color:#1AB394" aria-hidden="true"></i> <span class="nav-label">Parcels</span></a>
+                </li>
+                @endif
+
+
+
                 @if(Bouncer::can('Create_Email')) 
 
                 <li class="{{ Request::is('emails*') ? 'active' : '' }}">
