@@ -17,6 +17,11 @@ class Payment extends Model
         'payment_date',
     ];
 
+    protected $casts = [
+        'payment_date' => 'datetime', // This ensures it's a Carbon instance
+        'amount' => 'decimal:2',
+    ];
+
     // Relationships
     public function parcel()
     {
@@ -25,6 +30,11 @@ class Payment extends Model
 
     public function paymentMode()
     {
-        return $this->belongsTo(PaymentMode::class, 'paymentmode_id');
+        return $this->belongsTo(Paymentmode::class, 'paymentmode_id');
+    }
+
+    public function histories()
+    {
+        return $this->hasMany(PaymentHistory::class);
     }
 }
