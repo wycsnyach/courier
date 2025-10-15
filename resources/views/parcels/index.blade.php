@@ -26,7 +26,7 @@
             <div class="table-responsive">
                 <table class="table table-striped table-bordered table-hover parcels">
                     <thead>
-                        <tr>
+                        <tr class="font-bold text-navy">
                             <th>Reference #</th>
                             <th>Sender</th>
                             <th>Recipient</th>
@@ -39,6 +39,8 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <?php $paid=0; ?>
+
                         @foreach($parcels as $parcel)
                             <tr>
                                 <td>{{ $parcel->reference_number }}</td>
@@ -56,8 +58,19 @@
                                     {!! Form::close() !!}
                                 </td>
                             </tr>
+
+                             <?php  $paid+=$parcel->price;?>
                         @endforeach
                     </tbody>
+
+                     <tfoot>
+                            <td colspan="6" class="font-bold text-navy"><strong>Totals</strong></td>
+                              
+                            <td class="font-bold text-navy">Ksh {{number_format($paid,2)}}</td>
+                                                  
+                            <th colspan="7"></th>
+                                                
+                    </tfoot>
                 </table>
             </div>
         </div>
