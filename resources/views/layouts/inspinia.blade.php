@@ -64,7 +64,7 @@
                 @if(Bouncer::can('Create_Parcel')) 
 
                 <li class="{{ Request::is('parcels*') ? 'active' : '' }}">
-                    <a href="{{url('parcels')}}"><i class="fa fa-envelope-open" style="color:#1AB394" aria-hidden="true"></i> <span class="nav-label">Parcels</span></a>
+                    <a href="{{url('parcels')}}"><i class="fa fa-bars" style="color:#1AB394" aria-hidden="true"></i> <span class="nav-label">Parcels</span></a>
                 </li>
                 @endif
 
