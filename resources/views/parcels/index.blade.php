@@ -34,6 +34,7 @@
                             <th>To Branch</th>
                             <th>Weight</th>
                             <th>Price</th>
+                            <th>Status</th>
                             <th>Created</th>
                             <th>Action</th>
                         </tr>
@@ -50,6 +51,7 @@
                                 <td>{{ $parcel->toBranch ? $parcel->toBranch->branch_code : '' }}</td>
                                 <td>{{ $parcel->weight }}</td>
                                 <td>{{ number_format($parcel->price, 2) }}</td>
+                                <td>{!! $parcel->status_badge !!}</td>
                                 <td>{{ $parcel->created_at ? $parcel->created_at->format('Y-m-d') : '' }}</td>
                                 <td>
                                     <a href="{{ route('parcels.edit', $parcel->id) }}" class="btn btn-xs btn-success"><i class="fa fa-edit"></i></a>

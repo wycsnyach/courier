@@ -36,9 +36,11 @@
             <label class="control-label">Status</label>
             <select name="status" class="form-control">
                 <option value="">-- Select Status --</option>
-                <option value="0" {{ $parcel->status == 0 ? 'selected' : '' }}>In Transit</option>
-                <option value="1" {{ $parcel->status == 1 ? 'selected' : '' }}>Delivered</option>
-                <option value="2" {{ $parcel->status == 2 ? 'selected' : '' }}>Returned</option>
+                <option value="0" {{ $parcel->status == 0 ? 'selected' : '' }}>Pending</option>
+                <option value="1" {{ $parcel->status == 1 ? 'selected' : '' }}>In Transit</option>
+                <option value="2" {{ $parcel->status == 2 ? 'selected' : '' }}>Delivered</option>
+                <option value="3" {{ $parcel->status == 3 ? 'selected' : '' }}>Returned</option>
+
             </select>
           </div>
         </div>
@@ -128,6 +130,11 @@
         <div class="form-group col-md-12">
           <div class="form-md-line-input col-md-4">
             <label class="control-label">Price</label>
+            <input type="number" name="price" class="form-control" value="{{ $parcel->price }}" step="0.01" required>
+          </div>
+
+          <div class="form-md-line-input col-md-4">
+            <label class="control-label">Status</label>
             <input type="number" name="price" class="form-control" value="{{ $parcel->price }}" step="0.01" required>
           </div>
         </div>

@@ -50,4 +50,18 @@ class Parcel extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function getStatusBadgeAttribute()
+    {
+        $statuses = [
+            0 => ['text' => 'Pending', 'class' => 'warning'],
+            1 => ['text' => 'In Transit', 'class' => 'primary'],
+            2 => ['text' => 'Delivered', 'class' => 'success'],
+            3 => ['text' => 'Returned', 'class' => 'danger'],
+        ];
+
+        $status = $statuses[$this->status] ?? ['text' => 'Unknown', 'class' => 'default'];
+        
+        return '<span class="label label-' . $status['class'] . '">' . $status['text'] . '</span>';
+    }
 }

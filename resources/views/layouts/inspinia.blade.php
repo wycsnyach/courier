@@ -67,6 +67,12 @@
                     <a href="{{url('parcels')}}"><i class="fa fa-bars" style="color:#1AB394" aria-hidden="true"></i> <span class="nav-label">Parcels</span></a>
                 </li>
                 @endif
+                @if(Bouncer::can('Create_Payment')) 
+
+                <li class="{{ Request::is('payments*') ? 'active' : '' }}">
+                    <a href="{{url('payments')}}"><i class="fa fa-money" style="color:#1AB394" aria-hidden="true"></i> <span class="nav-label">Payments</span></a>
+                </li>
+                @endif
 
 
 
