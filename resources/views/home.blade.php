@@ -40,9 +40,90 @@
     </div>
 </div>
 
+<div class="row">
+    <div class="col-lg-12">
+        <div class="ibox">
+            <div class="ibox-title">
+                <h5>Parcels Summary (This Month)</h5>
+            </div>
+            <div class="ibox-content">
+                <canvas id="parcelStatusChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('parcelStatusChart').getContext('2d');
+    const parcelChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: @json($dates),
+            datasets: [
+                {
+                    label: 'Ordered',
+                    data: @json(array_values($chartData['Ordered'] ?? [])),
+                    borderColor: '#f8ac59',
+                    tension: 0.3,
+                    fill: false
+                },
+                {
+                    label: 'Dispatched',
+                    data: @json(array_values($chartData['Dispatched'] ?? [])),
+                    borderColor: '#1c84c6',
+                    tension: 0.3,
+                    fill: false
+                },
+                {
+                    label: 'Delivered',
+                    data: @json(array_values($chartData['Delivered'] ?? [])),
+                    borderColor: '#1ab394',
+                    tension: 0.3,
+                    fill: false
+                },
+                {
+                    label: 'Received',
+                    data: @json(array_values($chartData['Received'] ?? [])),
+                    borderColor: '#23c6c8',
+                    tension: 0.3,
+                    fill: false
+                },
+                {
+                    label: 'Returned',
+                    data: @json(array_values($chartData['Returned'] ?? [])),
+                    borderColor: '#ed5565',
+                    tension: 0.3,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Parcels by Status (Current Month)',
+                    font: { size: 16 }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+</script>
 
 
 </div>

@@ -13,6 +13,88 @@
 </div>
 
 <div class="wrapper wrapper-content animated fadeInRight">
+
+<div class="row m-b-md">
+
+    <!-- Ordered -->
+    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
+        <div class="ibox">
+            <div class="ibox-title">
+                <span class="label label-warning pull-right">Ordered</span>
+                <h5>Ordered</h5>
+            </div>
+            <div class="ibox-content">
+                <h3 class="no-margins">{{ $statusCounts['ordered'] }}</h3>
+                <div class="stat-percent font-bold text-warning">{{ $statusCounts['ordered'] }} <i class="fa fa-cubes"></i></div>
+                <small>Total Ordered Parcels</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dispatched -->
+    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
+        <div class="ibox">
+            <div class="ibox-title">
+                <span class="label label-primary pull-right">Dispatched</span>
+                <h5>Dispatched</h5>
+            </div>
+            <div class="ibox-content">
+                <h3 class="no-margins">{{ $statusCounts['dispatched'] }}</h3>
+                <div class="stat-percent font-bold text-primary">{{ $statusCounts['dispatched'] }} <i class="fa fa-truck"></i></div>
+                <small>Total Dispatched Parcels</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delivered -->
+    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
+        <div class="ibox">
+            <div class="ibox-title">
+                <span class="label label-success pull-right">Delivered</span>
+                <h5>Delivered</h5>
+            </div>
+            <div class="ibox-content">
+                <h3 class="no-margins">{{ $statusCounts['delivered'] }}</h3>
+                <div class="stat-percent font-bold text-success">{{ $statusCounts['delivered'] }} <i class="fa fa-check-circle"></i></div>
+                <small>Total Delivered Parcels</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Received -->
+    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
+        <div class="ibox">
+            <div class="ibox-title">
+                <span class="label label-info pull-right">Received</span>
+                <h5>Received</h5>
+            </div>
+            <div class="ibox-content">
+                <h3 class="no-margins">{{ $statusCounts['received'] }}</h3>
+                <div class="stat-percent font-bold text-info">{{ $statusCounts['received'] }} <i class="fa fa-download"></i></div>
+                <small>Total Received Parcels</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Returned -->
+    <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
+        <div class="ibox">
+            <div class="ibox-title">
+                <span class="label label-danger pull-right">Returned</span>
+                <h5>Returned</h5>
+            </div>
+            <div class="ibox-content">
+                <h3 class="no-margins">{{ $statusCounts['returned'] }}</h3>
+                <div class="stat-percent font-bold text-danger">{{ $statusCounts['returned'] }} <i class="fa fa-undo"></i></div>
+                <small>Total Returned Parcels</small>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+    
     <div class="ibox">
         <div class="ibox-title">
             <h5>List of Parcels</h5>
@@ -30,9 +112,9 @@
                             <th>Reference #</th>
                             <th>Sender</th>
                             <th>Recipient</th>
-                            <th>From Branch</th>
-                            <th>To Branch</th>
-                            <th>Weight</th>
+                            <th>From</th>
+                            <th>To</th>
+                            
                             <th>Price</th>
                             <th>Status</th>
                             <th>Created</th>
@@ -49,7 +131,7 @@
                                 <td>{{ $parcel->recipient_name }}</td>
                                 <td>{{ $parcel->fromBranch ? $parcel->fromBranch->branch_code : '' }}</td>
                                 <td>{{ $parcel->toBranch ? $parcel->toBranch->branch_code : '' }}</td>
-                                <td>{{ $parcel->weight }}</td>
+                               
                                 <td>{{ number_format($parcel->price, 2) }}</td>
                                 <td>{!! $parcel->status_badge !!}</td>
                                 <td>{{ $parcel->created_at ? $parcel->created_at->format('Y-m-d') : '' }}</td>
@@ -66,7 +148,7 @@
                     </tbody>
 
                      <tfoot>
-                            <td colspan="6" class="font-bold text-navy"><strong>Totals</strong></td>
+                            <td colspan="5" class="font-bold text-navy"><strong>Totals</strong></td>
                               
                             <td class="font-bold text-navy">Ksh {{number_format($paid,2)}}</td>
                                                   

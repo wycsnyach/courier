@@ -74,8 +74,8 @@
           <div class="form-group col-md-12">
            
             <div class="col-md-12">
-              <label>Sender Address</label>
-              <input type="text" name="sender_address" class="form-control" placeholder="Sender Address">
+              <label>Sender Location</label>
+              <input type="text" name="sender_address" class="form-control" placeholder="Sender Location">
             </div>
           </div>
         </div>
@@ -115,8 +115,8 @@
               
               <div class="form-group col-md-12">
                 <div class="col-md-12">
-                  <label>Receiver Address</label>
-                  <input type="text" name="recipient_address" class="form-control" placeholder="Receiver Address">
+                  <label>Receiver Location</label>
+                  <input type="text" name="recipient_address" class="form-control" placeholder="Receiver Location">
                 </div>
               </div>
         </div>
@@ -125,29 +125,62 @@
       
 
       <div class="row">
-       <div class="col-lg-6">
-          <!-- COURIER DETAILS Section -->
-          <h2 class="section-header">COURIER DETAILS</h2>
-          
-          <div class="form-group col-md-12">
-            <div class="col-md-12">
-              <label>Parcel Type *</label>
-              <select name="type" class="form-control fstdropdown-select" required>
-                <option value="">-- Choose Type --</option>
-                <option value="1">Outgoing</option>
-                <option value="2">Incoming</option>
-              </select>
+        
+        
+<!--          <div class="col-lg-6">
+                  
+             <h2 class="section-header">PRICE DETAILS</h2>
+            <div class="form-group col-md-12">
+              
+              <div class="col-md-6">
+                <label>Quantity *</label>
+                <input type="number" name="quantity" class="form-control" placeholder="Quantity" required>
+              </div>
+              <div class="col-md-6">
+                <label>Unit Price *</label>
+                <input type="number" name="unit_price" step="0.01" class="form-control" placeholder="Unit Price" required>
+              </div>
             </div>
-            <div class="col-md-6">
-              <label>Quantity *</label>
-              <input type="number" name="quantity" class="form-control" placeholder="Quantity" required>
+             <div class="form-group col-md-12">
+              
+              <div class="col-md-6">
+                <label>VAT 16%</label>
+                <input type="number" name="vat" class="form-control" placeholder="Vat" readonly>
+              </div>
+              <div class="col-md-6">
+                <label>Parcel Fee *</label>
+                <input type="number" name="price" step="0.01" class="form-control" placeholder="Parcel Fee" readonly>
+              </div>
             </div>
-            <div class="col-md-6">
-              <label>Courier Fee *</label>
-              <input type="number" name="price" step="0.01" class="form-control" placeholder="Courier Fee" required>
+          </div> -->
+          <div class="col-lg-6">
+            <!-- PRICE DETAILS Section -->          
+            <h2 class="section-header">PRICE DETAILS</h2>
+
+            <div class="form-group col-md-12">
+              <div class="col-md-6">
+                <label>Quantity *</label>
+                <input type="number" name="quantity" id="quantity" class="form-control" placeholder="Quantity" required>
+              </div>
+              <div class="col-md-6">
+                <label>Unit Price *</label>
+                <input type="number" name="unit_price" id="unit_price" step="0.01" class="form-control" placeholder="Unit Price" required>
+              </div>
+            </div>
+
+            <div class="form-group col-md-12">
+              <div class="col-md-6">
+                <label>VAT 16%</label>
+                <input type="text" id="vat_display" class="form-control" placeholder="VAT" readonly>
+                <input type="hidden" name="vat" id="vat">
+              </div>
+              <div class="col-md-6">
+                <label>Parcel Fee *</label>
+                <input type="text" id="price_display" class="form-control" placeholder="Parcel Fee" readonly>
+                <input type="hidden" name="price" id="price">
+              </div>
             </div>
           </div>
-        </div>
       
      
       
@@ -155,14 +188,26 @@
        -->
       <!-- PARCEL DIMENSIONS Section -->
       <div class="col-lg-6">
-      <h2 class="section-header">PARCEL DIMENSIONS</h2>
+      <h2 class="section-header">PARCEL DETAILS</h2>
       
         <div class="form-group col-md-12">
-          <div class="col-md-6">
+                <label>Parcel Type *</label>
+                <select name="type" class="form-control fstdropdown-select" required>
+                  <option value="">-- Choose Type --</option>
+                  <option value="1">Deliver</option>
+                  <option value="2">Pickup</option>
+                </select>
+              </div>
+          <div class="form-group col-md-12">
+          
+          <label>Description</label>
+          <textarea name="description" class="form-control" rows="4" placeholder="Enter parcel description..."></textarea>
+       
+          <!-- <div class="col-md-6">
             <label>Weight (Kg)</label>
             <input type="text" name="weight" class="form-control" required>
           </div>
-          <div class="col-md-6">
+       <div class="col-md-6">
             <label>Height (cm)</label>
             <input type="text" name="height" class="form-control" required>
           </div>
@@ -173,8 +218,8 @@
           <div class="col-md-6">
             <label>Length (cm)</label>
             <input type="text" name="length" class="form-control" required>
-          </div>
-        </div>
+          </div> 
+        </div> -->
     </div>
   </div>
 
@@ -189,6 +234,7 @@
 
       {!! Form::close() !!}
     </div>
+ 
   </div>
 </div>
 
@@ -218,4 +264,39 @@
   margin: 20px 0;
 }
 </style>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const quantityInput = document.getElementById('quantity');
+  const unitPriceInput = document.getElementById('unit_price');
+  const vatDisplay = document.getElementById('vat_display');
+  const vatHidden = document.getElementById('vat');
+  const priceDisplay = document.getElementById('price_display');
+  const priceHidden = document.getElementById('price');
+
+  function formatNumber(num) {
+    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function calculateValues() {
+    const quantity = parseFloat(quantityInput.value) || 0;
+    const unitPrice = parseFloat(unitPriceInput.value) || 0;
+    const subtotal = quantity * unitPrice;
+    const vat = 0.16 * subtotal;
+    const total = subtotal + vat;
+
+    // Display formatted values
+    vatDisplay.value = formatNumber(vat);
+    priceDisplay.value = formatNumber(total);
+
+    // Keep raw numeric values in hidden inputs
+    vatHidden.value = vat.toFixed(2);
+    priceHidden.value = total.toFixed(2);
+  }
+
+  quantityInput.addEventListener('input', calculateValues);
+  unitPriceInput.addEventListener('input', calculateValues);
+});
+</script>
 @endsection
