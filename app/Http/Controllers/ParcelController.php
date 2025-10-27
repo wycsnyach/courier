@@ -9,12 +9,29 @@ use Session;
 
 class ParcelController extends Controller
 {
-    public function index()
+    /*public function index()
     {
         Controller::has_ability('View_Parcel');
         $data['parcels'] = Parcel::with(['fromBranch', 'toBranch'])->get();
         return view('parcels.index', $data);
+    }*/
+
+    public function index()
+    {
+         Controller::has_ability('View_Parcel');
+        $parcels = Parcel::with(['fromBranch', 'toBranch'])->get();
+
+        $statusCounts = [
+            'ordered'    => Parcel::where('status', 0)->count(),
+            'dispatched' => Parcel::where('status', 1)->count(),
+            'delivered'  => Parcel::where('status', 2)->count(),
+            'received'   => Parcel::where('status', 3)->count(),
+            'returned'   => Parcel::where('status', 4)->count(),
+        ];
+
+        return view('parcels.index', compact('parcels', 'statusCounts'));
     }
+
 
     public function create()
     {
@@ -30,19 +47,21 @@ class ParcelController extends Controller
         $this->validate($request, [
             'reference_number' => 'required|string|max:100|unique:parcels',
             'sender_name' => 'required|string',
-            'sender_address' => 'required|string',
+            //'sender_address' => 'required|string',
             'sender_contact' => 'required|string',
             'recipient_name' => 'required|string',
-            'recipient_address' => 'required|string',
+            //'recipient_address' => 'required|string',
             'recipient_contact' => 'required|string',
             'type' => 'required|in:1,2',
             'from_branch_id' => 'required|exists:branches,id',
             'to_branch_id' => 'required|exists:branches,id',
-            'weight' => 'required|string',
-            'height' => 'required|string',
-            'width' => 'required|string',
-            'length' => 'required|string',
-            'price' => 'required|numeric',
+           // 'weight' => 'required|string',
+           // 'height' => 'required|string',
+           // 'width' => 'required|string',
+           // 'length' => 'required|string',
+            'quantity' => 'required|numeric',
+            'unit_price' => 'required|numeric',
+           // 'price' => 'required|numeric',
         ]);
 
         Parcel::create($request->all());

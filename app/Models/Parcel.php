@@ -24,8 +24,11 @@ class Parcel extends Model
         'height',
         'width',
         'length',
+        'quantity',
+        'unit_price',
         'price',
         'status',
+        'description',
     ];
 
     //public $timestamps = false;
@@ -54,10 +57,11 @@ class Parcel extends Model
     public function getStatusBadgeAttribute()
     {
         $statuses = [
-            0 => ['text' => 'Pending', 'class' => 'warning'],
-            1 => ['text' => 'In Transit', 'class' => 'primary'],
+            0 => ['text' => 'Ordered', 'class' => 'warning'],
+            1 => ['text' => 'Dispatched', 'class' => 'primary'],
             2 => ['text' => 'Delivered', 'class' => 'success'],
-            3 => ['text' => 'Returned', 'class' => 'danger'],
+            3 => ['text' => 'Received', 'class' => 'danger'],
+            4 => ['text' => 'Returned', 'class' => 'danger'],
         ];
 
         $status = $statuses[$this->status] ?? ['text' => 'Unknown', 'class' => 'default'];

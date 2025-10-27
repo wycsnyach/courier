@@ -32,7 +32,6 @@
                             <th>Sender → Recipient</th>
                             <th>Payment Mode</th>
                             <th>Amount</th>
-                            <th>Transaction Ref</th>
                             <th>Payment Date</th>
                             <th>Created</th>
                             <th>Action</th>
@@ -51,7 +50,6 @@
                                 </td>
                                 <td>{{ $payment->paymentMode->name ?? 'N/A' }}</td>
                                 <td>{{ number_format($payment->amount, 2) }}</td>
-                                <td>{{ $payment->transaction_reference ?? 'N/A' }}</td>
                                 <td>
                                     @if($payment->payment_date instanceof \Carbon\Carbon)
                                         {{ $payment->payment_date->format('Y-m-d H:i') }}

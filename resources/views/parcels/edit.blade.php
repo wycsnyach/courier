@@ -27,8 +27,8 @@
           <div class="form-md-line-input col-md-4">
             <label class="control-label">Parcel Type</label>
             <select name="type" class="form-control" required>
-              <option value="1" {{ $parcel->type == 1 ? 'selected' : '' }}>Outgoing</option>
-              <option value="2" {{ $parcel->type == 2 ? 'selected' : '' }}>Incoming</option>
+              <option value="1" {{ $parcel->type == 1 ? 'selected' : '' }}>Deliver</option>
+              <option value="2" {{ $parcel->type == 2 ? 'selected' : '' }}>Pickup</option>
             </select>
           </div>
 
@@ -36,11 +36,11 @@
             <label class="control-label">Status</label>
             <select name="status" class="form-control">
                 <option value="">-- Select Status --</option>
-                <option value="0" {{ $parcel->status == 0 ? 'selected' : '' }}>Pending</option>
-                <option value="1" {{ $parcel->status == 1 ? 'selected' : '' }}>In Transit</option>
+                <option value="0" {{ $parcel->status == 0 ? 'selected' : '' }}>Ordered</option>
+                <option value="1" {{ $parcel->status == 1 ? 'selected' : '' }}>Dispatched</option>
                 <option value="2" {{ $parcel->status == 2 ? 'selected' : '' }}>Delivered</option>
-                <option value="3" {{ $parcel->status == 3 ? 'selected' : '' }}>Returned</option>
-
+                <option value="3" {{ $parcel->status == 3 ? 'selected' : '' }}>Received</option>
+                <option value="3" {{ $parcel->status == 4 ? 'selected' : '' }}>Returned</option>
             </select>
           </div>
         </div>
@@ -103,14 +103,25 @@
             </select>
             <div class="form-control-focus"></div>
           </div>
+           <div class="form-md-line-input col-md-4">
+    <label class="control-label">Quantity *</label>
+    <input 
+      type="number" 
+      name="quantity" 
+      id="quantity" 
+      class="form-control" 
+      value="{{ $parcel->quantity }}" 
+      required
+    >
+  </div>
 
-          <div class="form-md-line-input col-md-4">
+         <!--  <div class="form-md-line-input col-md-4">
             <label class="control-label">Weight (Kg)</label>
             <input type="text" name="weight" class="form-control" value="{{ $parcel->weight }}" required>
-          </div>
+          </div> -->
         </div>
 
-        <div class="form-group col-md-12">
+        <!-- <div class="form-group col-md-12">
           <div class="form-md-line-input col-md-4">
             <label class="control-label">Height (cm)</label>
             <input type="text" name="height" class="form-control" value="{{ $parcel->height }}" required>
@@ -125,17 +136,60 @@
             <label class="control-label">Length (cm)</label>
             <input type="text" name="length" class="form-control" value="{{ $parcel->length }}" required>
           </div>
-        </div>
+        </div> -->
 
         <div class="form-group col-md-12">
-          <div class="form-md-line-input col-md-4">
-            <label class="control-label">Price</label>
-            <input type="number" name="price" class="form-control" value="{{ $parcel->price }}" step="0.01" required>
-          </div>
+  
 
-          <div class="form-md-line-input col-md-4">
+  <div class="form-md-line-input col-md-4">
+    <label class="control-label">Unit Price *</label>
+    <input 
+      type="number" 
+      name="unit_price" 
+      id="unit_price" 
+      class="form-control" 
+      value="{{ $parcel->unit_price }}" 
+      step="0.01" 
+      required
+    >
+  </div>
+
+  <div class="form-md-line-input col-md-4">
+    <label class="control-label">VAT (16%)</label>
+    <input 
+      type="text" 
+      id="vat_display" 
+      class="form-control" 
+      value="{{ number_format($parcel->vat, 2) }}" 
+      readonly
+    >
+    <input type="hidden" name="vat" id="vat" value="{{ $parcel->vat }}">
+  </div>
+
+  <div class="form-md-line-input col-md-4">
+    <label class="control-label">Price</label>
+    <input 
+      type="text" 
+      id="price_display" 
+      class="form-control" 
+      value="{{ number_format($parcel->price, 2) }}" 
+      readonly
+    >
+    <input type="hidden" name="price" id="price" value="{{ $parcel->price }}">
+  </div>
+</div>
+
+        <div class="form-group col-md-12">
+          
+
+         
+          <div class="col-md-8">
+            <label>Description</label>
+            <textarea name="description" class="form-control" rows="3" placeholder="Enter parcel description...">{{ old('description', $parcel->description ?? '') }}</textarea>
+          </div>
+           <div class="form-md-line-input col-md-4">
             <label class="control-label">Status</label>
-            <input type="number" name="price" class="form-control" value="{{ $parcel->price }}" step="0.01" required>
+            <input type="number" name="status" class="form-control" value="{{ $parcel->status }}" step="0.01" required>
           </div>
         </div>
 
@@ -152,4 +206,45 @@
     </div>
   </div>
 </div>
+
+<!-- Auto Calculation Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const quantityInput = document.getElementById('quantity');
+  const unitPriceInput = document.getElementById('unit_price');
+  const vatDisplay = document.getElementById('vat_display');
+  const vatHidden = document.getElementById('vat');
+  const priceDisplay = document.getElementById('price_display');
+  const priceHidden = document.getElementById('price');
+
+  function formatNumber(num) {
+    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function calculateValues() {
+    const quantity = parseFloat(quantityInput.value) || 0;
+    const unitPrice = parseFloat(unitPriceInput.value) || 0;
+    const subtotal = quantity * unitPrice;
+    const vat = 0.16 * subtotal;
+    const total = subtotal + vat;
+
+    // Display formatted numbers
+    vatDisplay.value = formatNumber(vat);
+    priceDisplay.value = formatNumber(total);
+
+    // Save raw numeric values
+    vatHidden.value = vat.toFixed(2);
+    priceHidden.value = total.toFixed(2);
+  }
+
+  // Trigger calculation on input, blur, and page load
+  quantityInput.addEventListener('input', calculateValues);
+  unitPriceInput.addEventListener('input', calculateValues);
+  quantityInput.addEventListener('blur', calculateValues);
+  unitPriceInput.addEventListener('blur', calculateValues);
+
+  // Run once when page loads (for edit form)
+  calculateValues();
+});
+</script>
 @endsection
