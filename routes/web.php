@@ -48,6 +48,9 @@ Route::group( ['middleware' => 'auth' ], function()
     Route::resource('branches',  App\Http\Controllers\BranchController::class);
     Route::resource('parcels',  App\Http\Controllers\ParcelController::class);
     Route::resource('payments',  App\Http\Controllers\PaymentController::class);
+    
+    Route::get('/generate-reference/{branchId}', [App\Http\Controllers\ParcelController::class, 'generateReference'])
+     ->name('generate.reference');
 
 
     Route::get('/payments/{payment_id}/history', [App\Http\Controllers\PaymentController::class, 'paymentHistory'])->name('payments.history');

@@ -43,8 +43,17 @@
 <div class="row">
     <div class="col-lg-12">
         <div class="ibox">
-            <div class="ibox-title">
-                <h5>Parcels Summary (This Month)</h5>
+            <div class="ibox-title d-flex justify-content-between align-items-center">
+                <div class="row">
+                    
+                    <div class="col-xs-6">
+                        <button id="prevMonth" class="btn btn-xs btn-success" data-month="{{ $prevMonth }}">← Prev</button>
+                        <button id="nextMonth" class="btn btn-xs btn-success" data-month="{{ $nextMonth }}">Next →</button>
+                    </div>
+                    <div class="col-xs-6">
+                        <h5 id="monthTitle">Parcels Summary ({{ $currentMonth }})</h5>
+                    </div>
+            </div>
             </div>
             <div class="ibox-content">
                 <canvas id="parcelStatusChart" height="100"></canvas>
@@ -53,13 +62,15 @@
     </div>
 </div>
 
-
+</div>
 
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    let chartInstance;
     const ctx = document.getElementById('parcelStatusChart').getContext('2d');
-    const parcelChart = new Chart(ctx, {
+
+    const chartConfig = {
         type: 'line',
         data: {
             labels: @json($dates),
@@ -104,27 +115,47 @@
         options: {
             responsive: true,
             plugins: {
-                legend: {
-                    position: 'top',
-                },
+                legend: { position: 'top' },
                 title: {
                     display: true,
-                    text: 'Parcels by Status (Current Month)',
+                    //text: 'Parcels by Status ({{ $currentMonth }})',
                     font: { size: 16 }
                 }
             },
             scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        precision: 0
-                    }
-                }
+                y: { beginAtZero: true, ticks: { precision: 0 } }
             }
         }
+    };
+
+    chartInstance = new Chart(ctx, chartConfig);
+
+    function updateChart(month) {
+        fetch(`{{ url('home') }}?month=${month}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('monthTitle').innerText = `Parcels Summary (${data.currentMonth})`;
+            document.getElementById('prevMonth').dataset.month = data.prevMonth;
+            document.getElementById('nextMonth').dataset.month = data.nextMonth;
+
+            chartInstance.data.labels = data.dates;
+            chartInstance.data.datasets.forEach(dataset => {
+                const label = dataset.label;
+                dataset.data = data.chartData[label] ?? [];
+            });
+            chartInstance.options.plugins.title.text = `Parcels by Status (${data.currentMonth})`;
+            chartInstance.update();
+        });
+    }
+
+    document.getElementById('prevMonth').addEventListener('click', function() {
+        updateChart(this.dataset.month);
+    });
+    document.getElementById('nextMonth').addEventListener('click', function() {
+        updateChart(this.dataset.month);
     });
 </script>
 
-
-</div>
 @endsection
