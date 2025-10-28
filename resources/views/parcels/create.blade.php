@@ -30,9 +30,9 @@
       <!-- Reference Number and Parcel Type Section -->
       <div class="form-group col-md-12">
         <div class="col-md-4">
-          <label>Reference Number</label>
-          <input type="text" name="reference_number" class="form-control" required>
-        </div>
+    <label>Reference Number</label>
+    <input type="text" id="reference_number" name="reference_number" class="form-control" readonly hidden>
+  </div>
         
         
       </div>
@@ -45,13 +45,24 @@
           
           <div class="form-group col-md-12">
              <div class="col-md-6">
-              <label>From Branch *</label>
-              <select name="from_branch_id" class="form-control fstdropdown-select" required>
+              <div class="form-group">
+              <label for="from_branch_id">From Branch</label>
+              <select name="from_branch_id" id="from_branch_id" class="form-control" required>
+                <option value="">-- Select Branch --</option>
+                @foreach($branches as $branch)
+                  <option value="{{ $branch->id }}">
+                    {{ $branch->branch_code }} - {{ $branch->city }}
+                  </option>
+                @endforeach
+              </select>
+            </div>
+
+              <!-- <select name="from_branch_id" class="form-control fstdropdown-select" required>
                 <option value="">-- Select Branch --</option>
                 @foreach($branches as $branch)
                   <option value="{{ $branch->id }}">{{ $branch->branch_code }} - {{ $branch->city }}</option>
                 @endforeach
-              </select>
+              </select> -->
             </div>
             <div class="col-md-6">
               <label>Sender Name *</label>
@@ -299,4 +310,51 @@ document.addEventListener('DOMContentLoaded', function() {
   unitPriceInput.addEventListener('input', calculateValues);
 });
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const branchSelect = document.getElementById('from_branch_id');
+  const referenceInput = document.getElementById('reference_number');
+
+  branchSelect.addEventListener('change', function() {
+    const branchId = this.value;
+    if (!branchId) {
+      referenceInput.value = '';
+      return;
+    }
+
+    referenceInput.value = 'Generating...';
+
+    fetch(`/generate-reference/${branchId}`, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(async response => {
+      const text = await response.text();
+      console.log("Raw response:", text); // 🔍 SEE EXACT RESPONSE HERE
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        referenceInput.value = 'Error';
+        console.error("Non-JSON response:", text);
+        return;
+      }
+
+      if (data.reference_number) {
+        referenceInput.value = data.reference_number;
+      } else {
+        referenceInput.value = 'Error';
+        console.error('Server error:', data);
+      }
+    })
+    .catch(err => {
+      referenceInput.value = 'Error';
+      console.error('Error generating reference:', err);
+    });
+  });
+});
+</script>
+
+
 @endsection

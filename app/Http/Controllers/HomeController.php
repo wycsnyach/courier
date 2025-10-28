@@ -9,38 +9,27 @@ use Carbon\Carbon;
 
 class HomeController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
         $this->middleware('auth');
     }
 
-    /**
-     * Show the application dashboard.
-     *
-     * @return \Illuminate\Contracts\Support\Renderable
-     */
-    public function index()
+    public function index(Request $request)
     {
-        // Load other controller objects for counts
-        $data['user'] = new UsersController;
-        $data['branch'] = new BranchController;
-        /* 
-        $data['supplier'] = new SupplierController;
-        $data['product'] = new ProductController;
-        $data['purchase'] = new PurchaseController;
-        $data['color'] = new ColorController;
-        $data['sale'] = new SaleController;
-        */
+        // If you have these controllers, keep creating them for counts
+        // (they appear to provide helper methods like users_count())
+        $userController = new UsersController;
+        $branchController = new BranchController;
 
-        // Prepare data for the chart (Current Month)
-        $startOfMonth = Carbon::now()->startOfMonth();
-        $endOfMonth = Carbon::now()->endOfMonth();
+        // Determine month to display (format: YYYY-MM)
+        $month = $request->input('month', Carbon::now()->format('Y-m'));
+        $selectedMonth = Carbon::createFromFormat('Y-m', $month);
 
+        // Date range for selected month
+        $startOfMonth = $selectedMonth->copy()->startOfMonth();
+        $endOfMonth = $selectedMonth->copy()->endOfMonth();
+
+        // Status labels
         $statusLabels = [
             0 => 'Ordered',
             1 => 'Dispatched',
@@ -49,58 +38,55 @@ class HomeController extends Controller
             4 => 'Returned'
         ];
 
+        // Fetch parcel counts grouped by day and status
         $parcelData = Parcel::select(
-                DB::raw('DATE(created_at) as date'),
+                DB::raw('DAY(created_at) as day'),
                 'status',
                 DB::raw('COUNT(*) as total')
             )
             ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
-            ->groupBy('date', 'status')
-            ->orderBy('date')
+            ->groupBy('day', 'status')
+            ->orderBy('day')
             ->get();
 
-        $dates = [];
+        $daysInMonth = $endOfMonth->day;
+        $days = range(1, $daysInMonth);
         $chartData = [];
 
+        // Initialize each status with zeros for all days
+        foreach ($statusLabels as $statusName) {
+            $chartData[$statusName] = array_fill(1, $daysInMonth, 0);
+        }
+
+        // Fill actual counts
         foreach ($parcelData as $row) {
-            $date = $row->date;
-            $status = $statusLabels[$row->status] ?? 'Unknown';
-            $dates[$date] = true;
-            $chartData[$status][$date] = $row->total;
+            $statusName = $statusLabels[$row->status] ?? 'Unknown';
+            $chartData[$statusName][$row->day] = $row->total;
         }
 
-        // Sort and fill missing dates
-        $dates = array_keys($dates);
-        sort($dates);
-
-        foreach ($statusLabels as $status) {
-            // ✅ Ensure array is initialized even if empty
-            if (!isset($chartData[$status])) {
-                $chartData[$status] = [];
-            }
-
-            foreach ($dates as $date) {
-                if (!isset($chartData[$status][$date])) {
-                    $chartData[$status][$date] = 0;
-                }
-            }
-
-            // ✅ Safe sort
-            ksort($chartData[$status]);
+        // Convert keyed arrays to simple numeric arrays (for JSON)
+        foreach ($chartData as $key => $values) {
+            $chartData[$key] = array_values($values);
         }
 
-        // Handle case where no parcels exist this month
-        if (empty($dates)) {
-            $dates = [Carbon::now()->format('Y-m-d')];
-            foreach ($statusLabels as $status) {
-                $chartData[$status][$dates[0]] = 0;
-            }
+        // Prepare response payload
+        $response = [
+            'currentMonth' => $selectedMonth->format('F Y'),
+            'prevMonth' => $selectedMonth->copy()->subMonth()->format('Y-m'),
+            'nextMonth' => $selectedMonth->copy()->addMonth()->format('Y-m'),
+            'dates' => $days, // 1,2,3...
+            'chartData' => $chartData,
+        ];
+
+        // If AJAX, return JSON only (front-end will update the chart)
+        if ($request->ajax()) {
+            return response()->json($response);
         }
 
-        // Pass everything to the view
-        $data['dates'] = array_values($dates);
-        $data['chartData'] = $chartData;
+        // For normal (initial) page render, pass the additional objects the blade expects
+        $response['user'] = $userController;
+        $response['branch'] = $branchController;
 
-        return view('home', $data);
+        return view('home', $response);
     }
 }
