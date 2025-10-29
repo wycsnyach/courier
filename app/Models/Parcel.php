@@ -57,15 +57,22 @@ class Parcel extends Model
     public function getStatusBadgeAttribute()
     {
         $statuses = [
-            0 => ['text' => 'Ordered', 'class' => 'warning'],
-            1 => ['text' => 'Dispatched', 'class' => 'primary'],
-            2 => ['text' => 'Delivered', 'class' => 'success'],
-            3 => ['text' => 'Received', 'class' => 'danger'],
-            4 => ['text' => 'Returned', 'class' => 'danger'],
+            0 => ['text' => 'Booked', 'class' => 'warning'],
+            1 => ['text' => 'Waiting', 'class' => 'secondary'],
+            2 => ['text' => 'Dispatched', 'class' => 'primary'],
+            3 => ['text' => 'Delivered', 'class' => 'success'],
+            4 => ['text' => 'Received', 'class' => 'info'],
+            5 => ['text' => 'Returned', 'class' => 'danger'],
         ];
 
         $status = $statuses[$this->status] ?? ['text' => 'Unknown', 'class' => 'default'];
         
         return '<span class="label label-' . $status['class'] . '">' . $status['text'] . '</span>';
     }
+
+    public function batches()
+    {
+        return $this->belongsToMany(ParcelBatch::class, 'batch_parcel');
+    }
+
 }

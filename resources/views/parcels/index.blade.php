@@ -13,93 +13,102 @@
 </div>
 
 <div class="wrapper wrapper-content animated fadeInRight">
+    <!-- Status Cards -->
     <div class="row m-b-md">
-        <!-- Ordered -->
-        <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
-            <div class="ibox">
-                <div class="ibox-title">
-                    <span class="label label-warning pull-right">Ordered</span>
-                    <h5>Ordered</h5>
-                </div>
-                <div class="ibox-content">
-                    <h3 class="no-margins">{{ $statusCounts['ordered'] }}</h3>
-                    <div class="stat-percent font-bold text-warning">{{ $statusCounts['ordered'] }} <i class="fa fa-cubes"></i></div>
-                    <small>Total Ordered Parcels</small>
-                </div>
-            </div>
-        </div>
+        @foreach ([
+            'booked' => ['label' => 'Booked', 'class' => 'warning', 'icon' => 'fa-cubes'],
+            'waiting' => ['label' => 'Waiting', 'class' => 'secondary', 'icon' => 'fa-hourglass-half'],
+            'dispatched' => ['label' => 'Dispatched', 'class' => 'primary', 'icon' => 'fa-truck'],
+            'delivered' => ['label' => 'Delivered', 'class' => 'success', 'icon' => 'fa-check-circle'],
+            'received' => ['label' => 'Received', 'class' => 'info', 'icon' => 'fa-download'],
+            'returned' => ['label' => 'Returned', 'class' => 'danger', 'icon' => 'fa-undo'],
+        ] as $key => $data)
 
-        <!-- Dispatched -->
-        <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
-            <div class="ibox">
-                <div class="ibox-title">
-                    <span class="label label-primary pull-right">Dispatched</span>
-                    <h5>Dispatched</h5>
-                </div>
-                <div class="ibox-content">
-                    <h3 class="no-margins">{{ $statusCounts['dispatched'] }}</h3>
-                    <div class="stat-percent font-bold text-primary">{{ $statusCounts['dispatched'] }} <i class="fa fa-truck"></i></div>
-                    <small>Total Dispatched Parcels</small>
-                </div>
-            </div>
-        </div>
-
-        <!-- Delivered -->
-        <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
-            <div class="ibox">
-                <div class="ibox-title">
-                    <span class="label label-success pull-right">Delivered</span>
-                    <h5>Delivered</h5>
-                </div>
-                <div class="ibox-content">
-                    <h3 class="no-margins">{{ $statusCounts['delivered'] }}</h3>
-                    <div class="stat-percent font-bold text-success">{{ $statusCounts['delivered'] }} <i class="fa fa-check-circle"></i></div>
-                    <small>Total Delivered Parcels</small>
+            <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
+                <div class="ibox">
+                    <div class="ibox-title">
+                        <span class="label label-{{ $data['class'] }} pull-right">{{ $data['label'] }}</span>
+                        <h5>{{ $data['label'] }}</h5>
+                    </div>
+                    <div class="ibox-content">
+                        <h3 class="no-margins">{{ $statusCounts[$key] }}</h3>
+                        <div class="stat-percent font-bold text-{{ $data['class'] }}">
+                            {{ $statusCounts[$key] }} <i class="fa {{ $data['icon'] }}"></i>
+                        </div>
+                        <small>Total {{ $data['label'] }} Parcels</small>
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Received -->
-        <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
-            <div class="ibox">
-                <div class="ibox-title">
-                    <span class="label label-info pull-right">Received</span>
-                    <h5>Received</h5>
-                </div>
-                <div class="ibox-content">
-                    <h3 class="no-margins">{{ $statusCounts['received'] }}</h3>
-                    <div class="stat-percent font-bold text-info">{{ $statusCounts['received'] }} <i class="fa fa-download"></i></div>
-                    <small>Total Received Parcels</small>
-                </div>
-            </div>
-        </div>
-
-        <!-- Returned -->
-        <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
-            <div class="ibox">
-                <div class="ibox-title">
-                    <span class="label label-danger pull-right">Returned</span>
-                    <h5>Returned</h5>
-                </div>
-                <div class="ibox-content">
-                    <h3 class="no-margins">{{ $statusCounts['returned'] }}</h3>
-                    <div class="stat-percent font-bold text-danger">{{ $statusCounts['returned'] }} <i class="fa fa-undo"></i></div>
-                    <small>Total Returned Parcels</small>
-                </div>
-            </div>
-        </div>
+        @endforeach
     </div>
 
-    <!-- Table Section -->
+    <!-- Filter + Navigation -->
     <div class="ibox">
-        <div class="ibox-title">
-            <h5>List of Parcels</h5>
-            <div class="ibox-tools">
-                <a href="{{ route('parcels.create') }}" class="btn btn-primary btn-xs">Add New <i class="fa fa-plus"></i></a>
-                <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-            </div>
-        </div>
+        <div class="ibox-title d-flex flex-wrap justify-content-between align-items-center p-3" style="gap: 10px;">
+            <!-- Title -->
+            <div class="row col-lg-12">
+            <div class="col-xs-3">
 
+                <h5>LIST OF PARCELS</h5>
+            </div>
+       
+
+            <!-- Controls Wrapper -->
+            <div class="d-flex flex-wrap align-items-center justify-content-end" style="gap: 10px;">
+                <div class="col-xs-3">
+
+                <!-- Filter Dropdown -->
+                <form method="GET" action="{{ route('parcels.index') }}" class="filter-form">
+                    <label for="filter">FILTER:</label>
+                    <select name="filter" id="filter" onchange="this.form.submit()">
+                        <option value="today" {{ $filter == 'today' ? 'selected' : '' }}>Today</option>
+                        <option value="week" {{ $filter == 'week' ? 'selected' : '' }}>This Week</option>
+                        <option value="month" {{ $filter == 'month' ? 'selected' : '' }}>This Month</option>
+                        <option value="year" {{ $filter == 'year' ? 'selected' : '' }}>This Year</option>
+                    </select>
+                </form>
+
+            </div>
+            <div class="col-xs-3">
+
+                <!-- Date Navigation -->
+                <form method="GET" action="{{ route('parcels.index') }}" class="form-inline mb-0">
+                    <input type="hidden" name="filter" value="day">
+                    <div class="d-flex align-items-center" style="gap: 8px;">
+                        <button type="submit" name="date" value="{{ \Carbon\Carbon::parse($date)->subDay()->toDateString() }}" class="btn btn-success btn-xs border" >
+                            <i class="fa fa-chevron-left"></i> Previous
+                        </button>
+
+                        <span class="font-weight-bold text-navy text-nowrap">
+                            {{ \Carbon\Carbon::parse($date)->format('F j, Y') }}
+                        </span>
+
+                        @if(\Carbon\Carbon::parse($date)->lt(today()))
+                            <button type="submit" name="date" value="{{ \Carbon\Carbon::parse($date)->addDay()->toDateString() }}" class="btn btn-success btn-xs border">
+                                Next <i class="fa fa-chevron-right" ></i>
+                            </button>
+                        @endif
+                    </div>
+                </form>
+
+                </div>
+                <div class="col-xs-3">
+                    <a href="{{ route('parcels.create') }}" class="btn btn-primary btn-xs d-flex align-items-center">
+                    <i class="fa fa-plus mr-1"></i> Add New
+                </a>
+            </div>
+
+            </div>
+
+       
+        </div>
+           
+                
+        </div>
+        <p></p>
+
+
+        <!-- Table Section -->
         <div class="ibox-content">
             <div class="table-responsive">
                 <table class="table table-striped table-bordered table-hover parcels">
@@ -131,7 +140,9 @@
                                 <td>
                                     <a href="{{ route('parcels.edit', $parcel->id) }}" class="btn btn-xs btn-success"><i class="fa fa-edit"></i></a>
                                     {!! Form::open(['method' => 'DELETE', 'route' => ['parcels.destroy', $parcel->id], 'style' => 'display:inline']) !!}
-                                        <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Are you sure?')"><i class="fa fa-trash"></i></button>
+                                        <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Are you sure?')">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
                                     {!! Form::close() !!}
                                 </td>
                             </tr>
@@ -150,6 +161,28 @@
         </div>
     </div>
 </div>
+
+<style>
+    .filter-form {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 0;
+    }
+    .filter-form label {
+        margin: 0;
+        font-size: 13px;
+        color: #6c757d;
+        font-weight: 600;
+    }
+    .filter-form select {
+        height: 28px !important;
+        padding: 2px 6px !important;
+        font-size: 13px !important;
+        line-height: 1.2;
+    }
+</style>
+
 @endsection
 
 @section('scripts')
@@ -159,7 +192,7 @@ $(document).ready(function() {
     $('.parcels').DataTable({
         pageLength: 10,
         responsive: true,
-        lengthChange: true, // allow user to select rows per page
+        lengthChange: true,
         ordering: true,
         dom: '<"html5buttons"B>lTfgitp',
         buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
