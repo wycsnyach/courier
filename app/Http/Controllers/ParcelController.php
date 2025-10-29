@@ -5,32 +5,60 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Parcel;
 use App\Models\Branch;
+
+use App\Models\ParcelBatch;
+use Illuminate\Support\Str;
 use Session;
 
 class ParcelController extends Controller
 {
-    /*public function index()
-    {
-        Controller::has_ability('View_Parcel');
-        $data['parcels'] = Parcel::with(['fromBranch', 'toBranch'])->get();
-        return view('parcels.index', $data);
-    }*/
+ 
+public function index(Request $request)
+{
+    Controller::has_ability('View_Parcel');
 
-    public function index()
-    {
-         Controller::has_ability('View_Parcel');
-        $parcels = Parcel::with(['fromBranch', 'toBranch'])->get();
+    // Get filter (today, week, month, year)
+    $filter = $request->get('filter', 'today');
+    $date = $request->get('date', today()->toDateString()); // default date = today
 
-        $statusCounts = [
-            'ordered'    => Parcel::where('status', 0)->count(),
-            'dispatched' => Parcel::where('status', 1)->count(),
-            'delivered'  => Parcel::where('status', 2)->count(),
-            'received'   => Parcel::where('status', 3)->count(),
-            'returned'   => Parcel::where('status', 4)->count(),
-        ];
+    $query = Parcel::with(['fromBranch', 'toBranch']);
 
-        return view('parcels.index', compact('parcels', 'statusCounts'));
+    // Apply date filters
+    switch ($filter) {
+        case 'week':
+            $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+            break;
+        case 'month':
+            $query->whereMonth('created_at', now()->month)
+                  ->whereYear('created_at', now()->year);
+            break;
+        case 'year':
+            $query->whereYear('created_at', now()->year);
+            break;
+        case 'day':
+        case 'today':
+        default:
+            $query->whereDate('created_at', $date);
+            break;
     }
+
+    $parcels = $query->orderBy('created_at', 'desc')->get();
+
+    // Status counts (for the summary cards)
+    $statusCounts = [
+        'booked'    => Parcel::where('status', 0)->count(),
+        'waiting'   => Parcel::where('status', 1)->count(),
+        'dispatched' => Parcel::where('status', 2)->count(),
+        'delivered'  => Parcel::where('status', 3)->count(),
+        'received'   => Parcel::where('status', 4)->count(),
+        'returned'   => Parcel::where('status', 5)->count(),
+
+    ];
+
+    return view('parcels.index', compact('parcels', 'statusCounts', 'filter', 'date'));
+}
+
+
 
 
     public function create()
@@ -40,34 +68,6 @@ class ParcelController extends Controller
         return view('parcels.create', $data);
     }
 
-    /*public function store(Request $request)
-    {
-        Controller::has_ability('Create_Parcel');
-
-        $this->validate($request, [
-            'reference_number' => 'required|string|max:100|unique:parcels',
-            'sender_name' => 'required|string',
-            //'sender_address' => 'required|string',
-            'sender_contact' => 'required|string',
-            'recipient_name' => 'required|string',
-            //'recipient_address' => 'required|string',
-            'recipient_contact' => 'required|string',
-            'type' => 'required|in:1,2',
-            'from_branch_id' => 'required|exists:branches,id',
-            'to_branch_id' => 'required|exists:branches,id',
-           // 'weight' => 'required|string',
-           // 'height' => 'required|string',
-           // 'width' => 'required|string',
-           // 'length' => 'required|string',
-            'quantity' => 'required|numeric',
-            'unit_price' => 'required|numeric',
-           // 'price' => 'required|numeric',
-        ]);
-
-        Parcel::create($request->all());
-        Session::flash('alert-success', 'Parcel has been created successfully.');
-        return redirect('parcels');
-    }*/
     public function store(Request $request)
     {
         Controller::has_ability('Create_Parcel');
@@ -113,33 +113,6 @@ class ParcelController extends Controller
         return redirect('parcels');
     }
 
-   /* public function generateReference($branchId)
-    {
-        $branch = \App\Models\Branch::find($branchId);
-
-        if (!$branch) {
-            return response()->json(['error' => 'Invalid branch ID'], 404);
-        }
-
-        $branchCode = strtoupper($branch->branch_code);
-
-        // Get last parcel reference for this branch
-        $lastParcel = \App\Models\Parcel::where('reference_number', 'like', $branchCode . '%')
-                        ->orderBy('id', 'desc')
-                        ->first();
-
-        if ($lastParcel) {
-            $lastNumber = intval(substr($lastParcel->reference_number, strlen($branchCode)));
-            $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
-        } else {
-            $newNumber = '0001';
-        }
-
-        $referenceNumber = $branchCode . $newNumber;
-
-        return response()->json(['reference_number' => $referenceNumber]);
-    }
-*/
     public function generateReference($branchId)
     {
         $branch = Branch::find($branchId);
@@ -198,4 +171,141 @@ class ParcelController extends Controller
         Session::flash('alert-danger', 'Parcel has been deleted.');
         return redirect('parcels');
     }
+
+
+
+
+    public function showBatchDispatch()
+    {
+       // Controller::has_ability('View_Parcel');
+
+        // Fetch only waiting parcels
+        $waitingParcels = Parcel::where('status', 1)->with(['fromBranch', 'toBranch'])->get();
+
+        return view('parcels.batch_dispatch', compact('waitingParcels'));
+    }
+
+    public function dispatchBatch(Request $request)
+    {
+      //  Controller::has_ability('Dispatch_Parcel');
+
+        $this->validate($request, [
+            'parcel_ids' => 'required|array',
+            'parcel_ids.*' => 'exists:parcels,id',
+        ]);
+
+        // Generate unique batch number
+        $batchNumber = 'BATCH-' . strtoupper(Str::random(6));
+
+        // Create the batch record
+        $batch = ParcelBatch::create([
+            'batch_number' => $batchNumber,
+            'dispatched_by' => auth()->user()->name ?? 'System',
+            'dispatched_at' => now(),
+        ]);
+
+        // Attach parcels to the batch
+        $batch->parcels()->attach($request->parcel_ids);
+
+        // Update parcel statuses
+        Parcel::whereIn('id', $request->parcel_ids)->update(['status' => 2]); // Dispatched
+
+        Session::flash('alert-success', "Batch {$batchNumber} dispatched successfully.");
+        return redirect()->route('parcels.index');
+    }
+
+    public function showBatchDetails($id)
+    {
+      //  Controller::has_ability('View_Parcel');
+
+        $batch = \App\Models\ParcelBatch::with(['parcels.fromBranch', 'parcels.toBranch'])->findOrFail($id);
+
+        return view('parcels.batch_details', compact('batch'));
+    }
+
+    /*public function listBatches()
+    {
+        Controller::has_ability('View_Parcel');
+
+        $batches = \App\Models\ParcelBatch::withCount('parcels')
+            ->orderBy('dispatched_at', 'desc')
+            ->get();
+
+        return view('parcels.batch_list', compact('batches'));
+    }
+*/
+   public function listBatches(Request $request)
+{
+    Controller::has_ability('View_Parcel');
+
+    $filter = $request->get('filter', 'today');
+    $date = $request->get('date', today()->toDateString());
+
+    $query = \App\Models\ParcelBatch::withCount('parcels');
+
+    // Apply date filters
+    switch ($filter) {
+        case 'week':
+            $query->whereBetween('dispatched_at', [now()->startOfWeek(), now()->endOfWeek()]);
+            break;
+        case 'month':
+            $query->whereMonth('dispatched_at', now()->month)
+                  ->whereYear('dispatched_at', now()->year);
+            break;
+        case 'year':
+            $query->whereYear('dispatched_at', now()->year);
+            break;
+        case 'day':
+        case 'today':
+        default:
+            $query->whereDate('dispatched_at', $date);
+            break;
+    }
+
+    // ✅ Paginate and keep filter + date for next pages
+    $batches = $query->orderBy('dispatched_at', 'desc')->paginate(10);
+    $batches->appends([
+        'filter' => $filter,
+        'date' => $date,
+    ]);
+
+    return view('parcels.batch_list', compact('batches', 'filter', 'date'));
+}
+
+
+/*    public function listBatches(Request $request)
+{
+    Controller::has_ability('View_Parcel');
+
+    $filter = $request->get('filter', 'today');
+    $date = $request->get('date', today()->toDateString());
+
+    $query = \App\Models\ParcelBatch::withCount('parcels');
+
+    // Apply date filters
+    switch ($filter) {
+        case 'week':
+            $query->whereBetween('dispatched_at', [now()->startOfWeek(), now()->endOfWeek()]);
+            break;
+        case 'month':
+            $query->whereMonth('dispatched_at', now()->month)
+                  ->whereYear('dispatched_at', now()->year);
+            break;
+        case 'year':
+            $query->whereYear('dispatched_at', now()->year);
+            break;
+        case 'day':
+        case 'today':
+        default:
+            $query->whereDate('dispatched_at', $date);
+            break;
+    }
+
+    $batches = $query->orderBy('dispatched_at', 'desc')->get();
+
+    return view('parcels.batch_list', compact('batches', 'filter', 'date'));
+}
+*/
+
+
 }

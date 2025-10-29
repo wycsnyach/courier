@@ -74,6 +74,32 @@
                 </li>
                 @endif
 
+               <!--  @if(Bouncer::can('Create_Parcel')) 
+
+                <li class="{{ Request::is('/parcels/batch-dispatch*') ? 'active' : '' }}">
+                    <a href="{{url('/parcels/batch-dispatch')}}"><i class="fa fa-money" style="color:#1AB394" aria-hidden="true"></i> <span class="nav-label">Dispatch</span></a>
+                </li>
+                @endif -->
+
+
+                  <!-- START OF SHIFT ASSIGNMENT TAB -->
+                @if(Bouncer::can('Create_Parcel')) 
+                <li class="nav metismenu @if(Request::is('batches')
+                            ||Request::is('batch-dispatch*')
+                            ){{'active open selected'}};@endif">
+                                       
+                        <a href="{{ url('batches') }}" class="nav-link">
+                            <i class="fa fa-truck" style="color:#1AB394" aria-hidden="true"></i>
+                            <span class="title">Dispatch</span>
+                            <span class="selected"></span>
+                                             
+                        </a>
+                                      
+                    </li>
+                @endif
+
+                <!-- END -->  
+
 
 
                 @if(Bouncer::can('Create_Email')) 

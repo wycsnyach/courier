@@ -46,11 +46,20 @@ Route::group( ['middleware' => 'auth' ], function()
     Route::resource('productcategories',  App\Http\Controllers\ProductcategoryController::class);
 
     Route::resource('branches',  App\Http\Controllers\BranchController::class);
-    Route::resource('parcels',  App\Http\Controllers\ParcelController::class);
+   
     Route::resource('payments',  App\Http\Controllers\PaymentController::class);
     
     Route::get('/generate-reference/{branchId}', [App\Http\Controllers\ParcelController::class, 'generateReference'])
      ->name('generate.reference');
+
+    Route::get('batch-dispatch', [App\Http\Controllers\ParcelController::class, 'showBatchDispatch'])->name('parcels.batchDispatch');
+    Route::post('/parcels/dispatch-batch', [App\Http\Controllers\ParcelController::class, 'dispatchBatch'])->name('parcels.dispatchBatch');
+    Route::get('/parcels/batch/{id}', [App\Http\Controllers\ParcelController::class, 'showBatchDetails'])->name('parcels.batchDetails');
+    Route::get('batches', [App\Http\Controllers\ParcelController::class, 'listBatches'])->name('parcels.batchList');
+
+    Route::resource('parcels',  App\Http\Controllers\ParcelController::class);
+
+
 
 
     Route::get('/payments/{payment_id}/history', [App\Http\Controllers\PaymentController::class, 'paymentHistory'])->name('payments.history');
