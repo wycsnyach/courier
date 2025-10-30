@@ -235,42 +235,141 @@ public function index(Request $request)
     }
 */
    public function listBatches(Request $request)
-{
-    Controller::has_ability('View_Parcel');
+    {
+        Controller::has_ability('View_Parcel');
 
-    $filter = $request->get('filter', 'today');
-    $date = $request->get('date', today()->toDateString());
+        $filter = $request->get('filter', 'today');
+        $date = $request->get('date', today()->toDateString());
 
-    $query = \App\Models\ParcelBatch::withCount('parcels');
+        $query = \App\Models\ParcelBatch::withCount('parcels');
 
-    // Apply date filters
-    switch ($filter) {
-        case 'week':
-            $query->whereBetween('dispatched_at', [now()->startOfWeek(), now()->endOfWeek()]);
-            break;
-        case 'month':
-            $query->whereMonth('dispatched_at', now()->month)
-                  ->whereYear('dispatched_at', now()->year);
-            break;
-        case 'year':
-            $query->whereYear('dispatched_at', now()->year);
-            break;
-        case 'day':
-        case 'today':
-        default:
-            $query->whereDate('dispatched_at', $date);
-            break;
+        // Apply date filters
+        switch ($filter) {
+            case 'week':
+                $query->whereBetween('dispatched_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                break;
+            case 'month':
+                $query->whereMonth('dispatched_at', now()->month)
+                      ->whereYear('dispatched_at', now()->year);
+                break;
+            case 'year':
+                $query->whereYear('dispatched_at', now()->year);
+                break;
+            case 'day':
+            case 'today':
+            default:
+                $query->whereDate('dispatched_at', $date);
+                break;
+        }
+
+        // ✅ Paginate and keep filter + date for next pages
+        $batches = $query->orderBy('dispatched_at', 'desc')->paginate(10);
+        $batches->appends([
+            'filter' => $filter,
+            'date' => $date,
+        ]);
+
+        return view('parcels.batch_list', compact('batches', 'filter', 'date'));
     }
 
-    // ✅ Paginate and keep filter + date for next pages
-    $batches = $query->orderBy('dispatched_at', 'desc')->paginate(10);
-    $batches->appends([
-        'filter' => $filter,
-        'date' => $date,
-    ]);
 
-    return view('parcels.batch_list', compact('batches', 'filter', 'date'));
+    public function allBatches(Request $request)
+    {
+        Controller::has_ability('View_Parcel');
+
+        $query = \App\Models\ParcelBatch::withCount('parcels');
+
+        // 🔹 Date range filter
+        if ($request->filled(['start_date', 'end_date'])) {
+            $query->whereBetween('dispatched_at', [
+                $request->start_date,
+                $request->end_date
+            ]);
+        }
+
+        // 🔹 Month range filter
+        if ($request->filled(['start_month', 'end_month'])) {
+            $query->whereBetween('dispatched_at', [
+                \Carbon\Carbon::parse($request->start_month)->startOfMonth(),
+                \Carbon\Carbon::parse($request->end_month)->endOfMonth(),
+            ]);
+        }
+
+        // 🔹 Batch number search
+        if ($request->filled('search')) {
+            $query->where('batch_number', 'like', "%{$request->search}%");
+        }
+
+        $batches = $query->orderBy('dispatched_at', 'desc')->paginate(10);
+
+        return view('parcels.all_batches', compact('batches'));
+    }
+
+
+    /*public function export(Request $request)
+    {
+        $type = $request->query('type');
+        $batches = DispatchBatch::withCount('parcels')->orderBy('dispatched_at', 'desc')->get();
+
+        if ($type === 'excel') {
+            return Excel::download(new BatchesExport($batches), 'Dispatched_Batches.xlsx');
+        } elseif ($type === 'pdf') {
+            $pdf = PDF::loadView('exports.batches_pdf', compact('batches'));
+            return $pdf->download('Dispatched_Batches.pdf');
+        }
+
+        return back();
+    }*/
+    public function export(Request $request)
+{
+    $type = $request->query('type');
+
+    // ✅ Load batches
+    $batches = \App\Models\ParcelBatch::withCount('parcels')
+                ->orderBy('dispatched_at', 'desc')
+                ->get();
+
+    // ✅ Load company settings (assume only one row)
+    $settings = \App\Models\Setting::first();
+
+    if ($type === 'excel') {
+        return \Excel::download(new \App\Exports\BatchesExport($batches, $settings), 'Dispatched_Batches_' . now()->format('Y_m_d') . '.xlsx');
+    }
+
+    if ($type === 'pdf') {
+        $pdf = \PDF::loadView('exports.batches_pdf', compact('batches', 'settings'))
+                   ->setPaper('a4', 'landscape');
+        return $pdf->download('Dispatched_Batches_' . now()->format('Y_m_d') . '.pdf');
+    }
+
+    return back()->with('error', 'Invalid export type.');
 }
+
+   /* public function export(Request $request)
+    {
+        $type = $request->query('type');
+
+        // Use ParcelBatch model instead of DispatchBatch
+        $batches = \App\Models\ParcelBatch::withCount('parcels')
+                    ->orderBy('dispatched_at', 'desc')
+                    ->get();
+
+        if ($type === 'excel') {
+            return \Excel::download(new \App\Exports\BatchesExport($batches), 'Dispatched_Batches.xlsx');
+        }
+
+        if ($type === 'pdf') {
+            $pdf = \PDF::loadView('exports.batches_pdf', compact('batches'))
+                       ->setPaper('a4', 'landscape');
+            return $pdf->download('Dispatched_Batches.pdf');
+        }
+
+        return back()->with('error', 'Invalid export type.');
+    }*/
+
+
+
+
 
 
 /*    public function listBatches(Request $request)
