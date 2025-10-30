@@ -86,6 +86,7 @@
                 @if(Bouncer::can('Create_Parcel')) 
                 <li class="nav metismenu @if(Request::is('batches')
                             ||Request::is('batch-dispatch*')
+                            ||Request::is('all-batches*')
                             ){{'active open selected'}};@endif">
                                        
                         <a href="{{ url('batches') }}" class="nav-link">
@@ -99,6 +100,14 @@
                 @endif
 
                 <!-- END -->  
+
+                 @if(Bouncer::can('Create_Setting')) 
+
+                <li class="{{ Request::is('settings*') ? 'active' : '' }}">
+                    <a href="{{url('settings')}}"><i class="fa fa-cogs" style="color:#1AB394" aria-hidden="true"></i> <span class="nav-label">Settings</span></a>
+                </li>
+                @endif
+
 
 
 

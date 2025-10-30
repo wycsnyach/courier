@@ -217,6 +217,8 @@ return [
             'Mail' => Illuminate\Support\Facades\Mail::class,
             'Form' => Collective\Html\FormFacade::class,
             'PDF' => Barryvdh\DomPDF\Facade::class,
+            'Excel' => Maatwebsite\Excel\Facades\Excel::class,
     ])->toArray(),
 
 ];
+

@@ -56,7 +56,7 @@
             </div>
             </div>
             <div class="ibox-content">
-                <canvas id="parcelStatusChart" height="100"></canvas>
+                <canvas id="parcelStatusChart" height="80"></canvas>
             </div>
         </div>
     </div>

@@ -73,7 +73,7 @@
                                     <td>{{ $batch->parcels_count }}</td>
                                     <td class="text-center">
                                         <a href="{{ route('parcels.batchDetails', $batch->id) }}"
-                                           class="btn btn-info btn-sm">
+                                           class="btn btn-info btn-xs">
                                             <i class="fa fa-eye"></i> View Details
                                         </a>
                                     </td>

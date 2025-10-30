@@ -56,10 +56,13 @@ Route::group( ['middleware' => 'auth' ], function()
     Route::post('/parcels/dispatch-batch', [App\Http\Controllers\ParcelController::class, 'dispatchBatch'])->name('parcels.dispatchBatch');
     Route::get('/parcels/batch/{id}', [App\Http\Controllers\ParcelController::class, 'showBatchDetails'])->name('parcels.batchDetails');
     Route::get('batches', [App\Http\Controllers\ParcelController::class, 'listBatches'])->name('parcels.batchList');
+    Route::get('all-batches', [App\Http\Controllers\ParcelController::class, 'allBatches'])->name('parcels.allBatches');
 
+    Route::get('/parcels/export', [App\Http\Controllers\ParcelController::class, 'export'])->name('parcels.export');
     Route::resource('parcels',  App\Http\Controllers\ParcelController::class);
 
-
+    Route::get('/settings', [App\Http\Controllers\SettingController::class, 'index'])->name('settings.index');
+    Route::post('/settings', [App\Http\Controllers\SettingController::class, 'store'])->name('settings.store');
 
 
     Route::get('/payments/{payment_id}/history', [App\Http\Controllers\PaymentController::class, 'paymentHistory'])->name('payments.history');
