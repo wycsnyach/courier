@@ -28,7 +28,7 @@ class Parcel extends Model
         'unit_price',
         'price',
         'status',
-        'description',
+        'description','recipient_collected_at', 'collected_by', 'recipient_signature'
     ];
 
     //public $timestamps = false;
@@ -74,5 +74,18 @@ class Parcel extends Model
     {
         return $this->belongsToMany(ParcelBatch::class, 'batch_parcel');
     }
+
+    public function batch()
+    {
+        return $this->belongsTo(\App\Models\ParcelBatch::class, 'batch_id');
+    }
+
+    public function deliveryHistories()
+    {
+        return $this->hasMany(ParcelDeliveryHistory::class);
+    }
+
+
+
 
 }

@@ -7,6 +7,8 @@ use App\Models\Parcel;
 use App\Models\Branch;
 
 use App\Models\ParcelBatch;
+use App\Models\BatchDeliveryHistory;
+
 use Illuminate\Support\Str;
 use Session;
 
@@ -262,7 +264,7 @@ public function index(Request $request)
                 break;
         }
 
-        // ✅ Paginate and keep filter + date for next pages
+        //  Paginate and keep filter + date for next pages
         $batches = $query->orderBy('dispatched_at', 'desc')->paginate(10);
         $batches->appends([
             'filter' => $filter,
@@ -324,12 +326,12 @@ public function index(Request $request)
 {
     $type = $request->query('type');
 
-    // ✅ Load batches
+    //  Load batches
     $batches = \App\Models\ParcelBatch::withCount('parcels')
                 ->orderBy('dispatched_at', 'desc')
                 ->get();
 
-    // ✅ Load company settings (assume only one row)
+    //  Load company settings (assume only one row)
     $settings = \App\Models\Setting::first();
 
     if ($type === 'excel') {
@@ -405,6 +407,215 @@ public function index(Request $request)
     return view('parcels.batch_list', compact('batches', 'filter', 'date'));
 }
 */
+
+/*
+-------------------------------------------------------------------------------------------------
+Batch showDeliveryReceipt
+START
+-------------------------------------------------------------------------------------------------
+*/
+
+public function batchDelivery(Request $request)
+{
+    Controller::has_ability('View_Parcel');
+
+    $query = \App\Models\ParcelBatch::withCount('parcels')
+        ->where('is_delivered', false); 
+
+    // 🔹 Date range filter
+    if ($request->filled(['start_date', 'end_date'])) {
+        $query->whereBetween('dispatched_at', [
+            $request->start_date,
+            $request->end_date
+        ]);
+    }
+
+    // 🔹 Month range filter
+    if ($request->filled(['start_month', 'end_month'])) {
+        $query->whereBetween('dispatched_at', [
+            \Carbon\Carbon::parse($request->start_month)->startOfMonth(),
+            \Carbon\Carbon::parse($request->end_month)->endOfMonth(),
+        ]);
+    }
+
+    // 🔹 Batch number search
+    if ($request->filled('search')) {
+        $query->where('batch_number', 'like', "%{$request->search}%");
+    }
+
+    $batches = $query->orderBy('dispatched_at', 'desc')->paginate(10);
+
+    return view('parcels.batch_delivery', compact('batches'));
+}
+
+
+
+/*
+Delivery Receipt (when the batch reaches the destination branch)
+----------------------------------------------------------------
+*/
+public function showDeliveryReceipt($id)
+{
+    $batch = ParcelBatch::with(['parcels.toBranch'])->findOrFail($id);
+    return view('parcels.delivery_receipt', compact('batch'));
+}
+
+
+
+public function confirmDeliveryReceipt(Request $request, $id)
+{
+    $batch = ParcelBatch::findOrFail($id);
+
+    $batch->update([
+        'received_by_branch' => auth()->user()->name,
+        'received_at_branch_at' => now(),
+        'is_delivered' => true, 
+        'delivered_at' => now(),
+    ]);
+
+    // Update parcels to "Delivered"
+    $batch->parcels()->update(['status' => 3]);
+
+    // Log to delivery history
+    BatchDeliveryHistory::create([
+        'batch_id' => $batch->id,
+        'user_id' => auth()->id(),
+        'action' => 'Batch Delivered to Branch',
+        'remarks' => 'Batch successfully delivered to destination branch',
+        'action_time' => now(),
+    ]);
+
+    Session::flash('alert-success', "Batch {$batch->batch_number} marked as delivered.");
+    return redirect()->route('parcels.batchDeliveryHistory');
+}
+
+/*
+Delivery History function
+*/
+
+public function batchDeliveryHistory(Request $request)
+{
+    Controller::has_ability('View_Parcel');
+
+    // List of delivered batches
+    $batches = \App\Models\ParcelBatch::withCount('parcels')
+        ->where('is_delivered', true)
+        ->orderBy('delivered_at', 'desc')
+        ->paginate(10);
+
+    // History logs
+    $histories = BatchDeliveryHistory::with(['batch', 'user'])
+        ->orderBy('action_time', 'desc')
+        ->paginate(10);
+
+    return view('parcels.batch_delivery_history', compact('batches', 'histories'));
+}
+
+/*
+END ===========================================================================================
+*/
+
+/*
+Recipient Receipt (when the recipient receives their parcel)
+START
+--------------------------------------------------------------------------------------------------
+*/
+
+/*
+Delivered but Not Yet Collected
+*/
+
+/*
+Delivered but Not Yet Collected (Per Parcel)
+-----------------------------------------------------------------------
+*/
+public function recipientCollectionList()
+{
+    Controller::has_ability('View_Parcel');
+
+    $parcels = \App\Models\Parcel::with('batch')
+        ->where('status', 3) // Delivered to branch
+        ->whereNull('recipient_collected_at')
+        ->orderBy('updated_at', 'desc')
+        ->paginate(10);
+
+    return view('parcels.recipient_collection_list', compact('parcels'));
+}
+
+
+/*
+Show Receipt Page for a Single Parcel
+-----------------------------------------------------------------------
+*/
+public function showRecipientReceipt($id)
+{
+    $parcel = \App\Models\Parcel::with('batch')->findOrFail($id);
+    return view('parcels.recipient_receipt', compact('parcel'));
+}
+
+
+/*
+Confirm that the Recipient has Collected the Parcel
+-----------------------------------------------------------------------
+*/
+public function confirmRecipientReceipt(Request $request, $id)
+{
+    $parcel = \App\Models\Parcel::findOrFail($id);
+
+    // Handle signature
+    $signaturePath = null;
+    if ($request->has('signature') && !empty($request->signature)) {
+        $signatureData = $request->input('signature');
+        $signaturePath = 'signatures/' . uniqid() . '.png';
+        $signatureData = str_replace('data:image/png;base64,', '', $signatureData);
+        $signatureData = str_replace(' ', '+', $signatureData);
+        \Storage::disk('public')->put($signaturePath, base64_decode($signatureData));
+    }
+
+    // Update parcel info
+    /*$parcel->update([
+        'status' => 4, // Received
+        'recipient_signature' => $signaturePath,
+        'recipient_collected_at' => now(),
+        'collected_by' => auth()->user()->first_name,
+
+    ]);*/
+
+    $parcel->update([
+        'status' => 4,
+        'recipient_signature' => $signaturePath,
+        'recipient_collected_at' => now(),
+        'collected_by' => collect([
+            auth()->user()->first_name,
+            auth()->user()->middle_name,
+            auth()->user()->last_name,
+        ])->filter()->join(' '),
+    ]);
+
+
+   
+    // Record in parcel delivery history
+    \App\Models\ParcelDeliveryHistory::create([
+        'parcel_id' => $parcel->id,
+        'user_id' => auth()->id(),
+        'action' => 'Parcel Received by Customer',
+        'remarks' => "Parcel {$parcel->reference_number} received by {$parcel->recipient_name}",
+        'action_time' => now(),
+    ]);
+
+
+    Session::flash('alert-success', "Parcel {$parcel->reference_number} successfully received by {$parcel->recipient_name}.");
+    return redirect()->route('parcels.recipientCollectionList');
+}
+
+public function parcelDeliveryHistory($id)
+{
+    Controller::has_ability('View_Parcel');
+
+    $parcel = \App\Models\Parcel::with(['deliveryHistories.user'])->findOrFail($id);
+
+    return view('parcels.parcel_delivery_history', compact('parcel'));
+}
 
 
 }

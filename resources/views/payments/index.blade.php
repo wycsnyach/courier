@@ -14,10 +14,12 @@
 
 <div class="wrapper wrapper-content animated fadeInRight">
     <div class="ibox">
-        <div class="ibox-title">
+        <div class="ibox-title d-flex justify-content-between align-items-center">
             <h5>List of Payments</h5>
             <div class="ibox-tools">
-                <a href="{{ route('payments.create') }}" class="btn btn-primary btn-xs">Add New <i class="fa fa-plus"></i></a>
+                <a href="{{ route('payments.create') }}" class="btn btn-primary btn-xs">
+                    Add New <i class="fa fa-plus"></i>
+                </a>
                 <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
             </div>
         </div>
@@ -31,53 +33,62 @@
                             <th>Parcel Reference</th>
                             <th>Sender → Recipient</th>
                             <th>Payment Mode</th>
-                            <th>Amount</th>
+                            <th>Amount (Ksh)</th>
                             <th>Payment Date</th>
                             <th>Created</th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php $totalAmount = 0; ?>
+                        @php $totalAmount = 0; @endphp
 
                         @foreach($payments as $payment)
                             <tr>
                                 <td>{{ $payment->id }}</td>
                                 <td>{{ $payment->parcel->reference_number ?? 'N/A' }}</td>
                                 <td>
-                                    {{ $payment->parcel->sender_name ?? 'N/A' }} → 
+                                    {{ $payment->parcel->sender_name ?? 'N/A' }} →
                                     {{ $payment->parcel->recipient_name ?? 'N/A' }}
                                 </td>
                                 <td>{{ $payment->paymentMode->name ?? 'N/A' }}</td>
                                 <td>{{ number_format($payment->amount, 2) }}</td>
                                 <td>
-                                    @if($payment->payment_date instanceof \Carbon\Carbon)
-                                        {{ $payment->payment_date->format('Y-m-d H:i') }}
-                                    @else
+                                    @if($payment->payment_date)
                                         {{ \Carbon\Carbon::parse($payment->payment_date)->format('Y-m-d H:i') }}
+                                    @else
+                                        N/A
                                     @endif
                                 </td>
-                                <td>{{ $payment->created_at ? $payment->created_at->format('Y-m-d') : '' }}</td>
+                                <td>{{ optional($payment->created_at)->format('Y-m-d') }}</td>
                                 <td>
-                                     <a href="{{ route('payments.history', $payment->id) }}" class="btn btn-xs btn-info" title="Payment History">
-                                            <i class="fa fa-history"></i>
-                                        </a>
-                                    <a href="{{ route('payments.edit', $payment->id) }}" class="btn btn-xs btn-success"><i class="fa fa-edit"></i></a>
-                                    {!! Form::open(['method' => 'DELETE','route' => ['payments.destroy', $payment->id],'style'=>'display:inline']) !!}
-                                        <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Are you sure?')"><i class="fa fa-trash"></i></button>
+                                    <a href="{{ route('payments.history', $payment->id) }}" 
+                                       class="btn btn-xs btn-info" title="Payment History">
+                                        <i class="fa fa-history"></i>
+                                    </a>
+
+                                    <a href="{{ route('payments.edit', $payment->id) }}" 
+                                       class="btn btn-xs btn-success" title="Edit Payment">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+
+                                    {!! Form::open(['method' => 'DELETE', 'route' => ['payments.destroy', $payment->id], 'style' => 'display:inline']) !!}
+                                        <button type="submit" class="btn btn-xs btn-danger" 
+                                                onclick="return confirm('Are you sure you want to delete this payment?')">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
                                     {!! Form::close() !!}
                                 </td>
                             </tr>
 
-                            <?php $totalAmount += $payment->amount; ?>
+                            @php $totalAmount += $payment->amount; @endphp
                         @endforeach
                     </tbody>
 
                     <tfoot>
                         <tr>
-                            <td colspan="4" class="font-bold text-navy"><strong>Totals</strong></td>
-                            <td class="font-bold text-navy">{{ number_format($totalAmount, 2) }}</td>
-                            <th colspan="5"></th>
+                            <td colspan="4" class="font-bold text-navy"><strong>Total</strong></td>
+                            <td class="font-bold text-navy">Ksh {{ number_format($totalAmount, 2) }}</td>
+                            <td colspan="3"></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -94,11 +105,17 @@ $(document).ready(function(){
   $('.payments').DataTable({
     pageLength: 10,
     responsive: true,
+    order: [[0, 'desc']], // Sort by ID descending (newest first)
     dom: '<"html5buttons"B>lTfgitp',
-    buttons: [
-        'copy', 'csv', 'excel', 'pdf', 'print'
-    ],
-    order: [[0, 'desc']] // Sort by ID descending (newest first)
+    buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+    language: {
+        paginate: {
+            previous: "<i class='fa fa-chevron-left'></i>",
+            next: "<i class='fa fa-chevron-right'></i>"
+        },
+        lengthMenu: "Show _MENU_ entries per page",
+        info: "Showing _START_ to _END_ of _TOTAL_ payments"
+    }
   });
 });
 </script>

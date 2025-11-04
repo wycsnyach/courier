@@ -87,6 +87,10 @@
                 <li class="nav metismenu @if(Request::is('batches')
                             ||Request::is('batch-dispatch*')
                             ||Request::is('all-batches*')
+                            ||Request::is('batch-delivery*')
+                            ||Request::is('batch-receipt*')
+
+                            ||Request::is('/batches/recipient-collection*')
                             ){{'active open selected'}};@endif">
                                        
                         <a href="{{ url('batches') }}" class="nav-link">
@@ -99,6 +103,7 @@
                     </li>
                 @endif
 
+             
                 <!-- END -->  
 
                  @if(Bouncer::can('Create_Setting')) 
