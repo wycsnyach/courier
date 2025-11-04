@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('received_by_branch')->nullable();
             $table->timestamp('received_at_branch_at')->nullable();
             $table->string('delivered_by')->nullable();
-            $table->timestamp('delivered_at')->nullable();
+            //$table->timestamp('delivered_at')->nullable();
         });
     }
 
