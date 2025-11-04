@@ -30,12 +30,51 @@ class HomeController extends Controller
         $endOfMonth = $selectedMonth->copy()->endOfMonth();
 
         // Status labels
-        $statusLabels = [
+        /*$statusLabels = [
             0 => 'Ordered',
             1 => 'Dispatched',
             2 => 'Delivered',
             3 => 'Received',
             4 => 'Returned'
+        ];*/
+        $statusLabels = [
+            0 => 'Ordered',
+            1 => 'Waiting',
+            2 => 'Dispatched',
+            3 => 'Delivered',
+            4 => 'Received',
+            5 => 'Returned'
+        ];
+
+        /*$statusCounts = [
+            'booked'    => Parcel::where('status', 0)->count(),
+            'waiting'   => Parcel::where('status', 1)->count(),
+            'dispatched' => Parcel::where('status', 2)->count(),
+            'delivered'  => Parcel::where('status', 3)->count(),
+            'received'   => Parcel::where('status', 4)->count(),
+            'returned'   => Parcel::where('status', 5)->count(),
+
+        ];*/
+
+        $statusCounts = [
+            'booked'     => Parcel::where('status', 0)
+                                ->whereDate('created_at', Carbon::today())
+                                ->count(),
+            'waiting'    => Parcel::where('status', 1)
+                                ->whereDate('created_at', Carbon::today())
+                                ->count(),
+            'dispatched' => Parcel::where('status', 2)
+                                ->whereDate('created_at', Carbon::today())
+                                ->count(),
+            'delivered'  => Parcel::where('status', 3)
+                                ->whereDate('created_at', Carbon::today())
+                                ->count(),
+            'received'   => Parcel::where('status', 4)
+                                ->whereDate('created_at', Carbon::today())
+                                ->count(),
+            'returned'   => Parcel::where('status', 5)
+                                ->whereDate('created_at', Carbon::today())
+                                ->count(),
         ];
 
         // Fetch parcel counts grouped by day and status
@@ -86,6 +125,7 @@ class HomeController extends Controller
         // For normal (initial) page render, pass the additional objects the blade expects
         $response['user'] = $userController;
         $response['branch'] = $branchController;
+        $response['statusCounts'] = $statusCounts; 
 
         return view('home', $response);
     }

@@ -144,6 +144,10 @@
                                             <i class="fa fa-trash"></i>
                                         </button>
                                     {!! Form::close() !!}
+                                    <a href="{{ route('parcels.deliveryHistory', $parcel->id) }}" class="btn btn-xs btn-info">
+    View History
+</a>
+
                                 </td>
                             </tr>
                             @php $paid += $parcel->price; @endphp

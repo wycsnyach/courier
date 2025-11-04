@@ -58,6 +58,29 @@ Route::group( ['middleware' => 'auth' ], function()
     Route::get('batches', [App\Http\Controllers\ParcelController::class, 'listBatches'])->name('parcels.batchList');
     Route::get('all-batches', [App\Http\Controllers\ParcelController::class, 'allBatches'])->name('parcels.allBatches');
 
+    Route::get('batch-delivery', [App\Http\Controllers\ParcelController::class, 'batchDelivery'])->name('parcels.batchDelivery');
+    // Batch Delivery History
+    Route::get('delivery-history', [App\Http\Controllers\ParcelController::class, 'batchDeliveryHistory'])->name('parcels.batchDeliveryHistory');
+
+
+
+    Route::get('/batches/{id}/delivery-receipt', [App\Http\Controllers\ParcelController::class, 'showDeliveryReceipt'])->name('parcels.deliveryReceipt');
+    Route::post('/batches/{id}/delivery-receipt', [App\Http\Controllers\ParcelController::class, 'confirmDeliveryReceipt'])->name('parcels.confirmDeliveryReceipt');
+
+    
+    // Recipient Collection Routes
+    Route::get('/batches/recipient-collection', [App\Http\Controllers\ParcelController::class, 'recipientCollectionList'])->name('parcels.recipientCollectionList');
+    Route::get('/batches/{id}/recipient-receipt', [App\Http\Controllers\ParcelController::class, 'showRecipientReceipt'])->name('parcels.recipientReceipt');
+    Route::post('/batches/{id}/recipient-receipt', [App\Http\Controllers\ParcelController::class, 'confirmRecipientReceipt'])->name('parcels.confirmRecipientReceipt');
+
+
+    Route::get('recipient-collection-list', [App\Http\Controllers\ParcelController::class, 'recipientCollectionList'])->name('parcels.recipientCollectionList');
+    Route::get('/parcels/{id}/recipient-receipt', [App\Http\Controllers\ParcelController::class, 'showRecipientReceipt'])->name('parcels.recipientReceipt');
+    Route::post('/parcels/{id}/recipient-receipt', [App\Http\Controllers\ParcelController::class, 'confirmRecipientReceipt'])->name('parcels.confirmRecipientReceipt');
+    Route::get('/parcels/{id}/delivery-history', [App\Http\Controllers\ParcelController::class, 'parcelDeliveryHistory'])->name('parcels.deliveryHistory');
+
+
+
     Route::get('/parcels/export', [App\Http\Controllers\ParcelController::class, 'export'])->name('parcels.export');
     Route::resource('parcels',  App\Http\Controllers\ParcelController::class);
 
