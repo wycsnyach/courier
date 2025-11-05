@@ -202,7 +202,12 @@ public function index(Request $request)
         // Create the batch record
         $batch = ParcelBatch::create([
             'batch_number' => $batchNumber,
-            'dispatched_by' => auth()->user()->name ?? 'System',
+            //'dispatched_by' => auth()->user()->name ?? 'System',
+            'dispatched_by' =>collect([
+                auth()->user()->first_name,
+                auth()->user()->middle_name,
+                auth()->user()->last_name,
+                ])->filter()->join(' '),
             'dispatched_at' => now(),
         ]);
 
@@ -223,6 +228,15 @@ public function index(Request $request)
         $batch = \App\Models\ParcelBatch::with(['parcels.fromBranch', 'parcels.toBranch'])->findOrFail($id);
 
         return view('parcels.batch_details', compact('batch'));
+    }
+
+    public function reportshowBatchDetails($id)
+    {
+      //  Controller::has_ability('View_Parcel');
+
+        $batch = \App\Models\ParcelBatch::with(['parcels.fromBranch', 'parcels.toBranch'])->findOrFail($id);
+
+        return view('parcels.report_batch_details', compact('batch'));
     }
 
     /*public function listBatches()
@@ -467,7 +481,12 @@ public function confirmDeliveryReceipt(Request $request, $id)
     $batch = ParcelBatch::findOrFail($id);
 
     $batch->update([
-        'received_by_branch' => auth()->user()->name,
+        //'received_by_branch' => auth()->user()->name,
+        'received_by_branch'  => collect([
+            auth()->user()->first_name,
+            auth()->user()->middle_name,
+            auth()->user()->last_name,
+        ])->filter()->join(' '),
         'received_at_branch_at' => now(),
         'is_delivered' => true, 
         'delivered_at' => now(),
@@ -572,15 +591,6 @@ public function confirmRecipientReceipt(Request $request, $id)
         \Storage::disk('public')->put($signaturePath, base64_decode($signatureData));
     }
 
-    // Update parcel info
-    /*$parcel->update([
-        'status' => 4, // Received
-        'recipient_signature' => $signaturePath,
-        'recipient_collected_at' => now(),
-        'collected_by' => auth()->user()->first_name,
-
-    ]);*/
-
     $parcel->update([
         'status' => 4,
         'recipient_signature' => $signaturePath,
@@ -617,5 +627,40 @@ public function parcelDeliveryHistory($id)
     return view('parcels.parcel_delivery_history', compact('parcel'));
 }
 
+/*
+REPORT ALL BATCHES 
+*/
+
+    public function reportallBatches(Request $request)
+    {
+        Controller::has_ability('View_Parcel');
+
+        $query = \App\Models\ParcelBatch::withCount('parcels');
+
+        // 🔹 Date range filter
+        if ($request->filled(['start_date', 'end_date'])) {
+            $query->whereBetween('dispatched_at', [
+                $request->start_date,
+                $request->end_date
+            ]);
+        }
+
+        // 🔹 Month range filter
+        if ($request->filled(['start_month', 'end_month'])) {
+            $query->whereBetween('dispatched_at', [
+                \Carbon\Carbon::parse($request->start_month)->startOfMonth(),
+                \Carbon\Carbon::parse($request->end_month)->endOfMonth(),
+            ]);
+        }
+
+        // 🔹 Batch number search
+        if ($request->filled('search')) {
+            $query->where('batch_number', 'like', "%{$request->search}%");
+        }
+
+        $batches = $query->orderBy('dispatched_at', 'desc')->paginate(10);
+
+        return view('parcels.report_all_batches', compact('batches'));
+    }
 
 }

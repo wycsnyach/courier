@@ -188,4 +188,122 @@ class PaymentController extends Controller
             }
         }
     }
+
+/*
+Report 
+=================================================================================
+*/
+public function monthlyBranchRevenue(Request $request)
+{
+    $days = $request->query('days', 30); // Default: last 30 days
+    $startDate = now()->subDays($days)->startOfDay();
+    $endDate = now()->endOfDay();
+
+    // ✅ Get branch codes from the branches table dynamically
+    $branchCodes = DB::table('branches')->pluck('branch_code')->map(fn($c) => strtoupper(trim($c)))->toArray();
+
+    // ✅ Query payments joined with parcels, group by branch code and date
+    $revenues = DB::table('payments')
+        ->join('parcels', 'payments.parcel_id', '=', 'parcels.id')
+        ->selectRaw("
+            UPPER(
+                CASE
+                    " . collect($branchCodes)->map(fn($code) => "WHEN parcels.reference_number LIKE '{$code}%' THEN '{$code}'")->implode(' ') . "
+                    ELSE 'OTHER'
+                END
+            ) AS branch,
+            DATE(payments.payment_date) AS date,
+            SUM(payments.amount) AS total_amount
+        ")
+        ->whereBetween('payments.payment_date', [$startDate, $endDate])
+        ->groupBy('branch', 'date')
+        ->orderBy('date')
+        ->get();
+
+    // ✅ Create date range
+    $dates = [];
+    $date = $startDate->copy();
+    while ($date <= $endDate) {
+        $dates[] = $date->format('Y-m-d');
+        $date->addDay();
+    }
+
+    // ✅ Prepare structured chart data
+    $chartData = [];
+
+    foreach ($branchCodes as $branch) {
+        $chartData[$branch] = collect($dates)->map(function ($d) use ($branch, $revenues) {
+            $record = $revenues->firstWhere(fn($r) => $r->branch === $branch && $r->date === $d);
+            return [
+                'date' => $d,
+                'amount' => $record ? round($record->total_amount, 2) : 0
+            ];
+        })->toArray();
+    }
+
+    // Add "OTHER" group (in case some parcels don't match known branches)
+    $chartData['OTHER'] = collect($dates)->map(function ($d) use ($revenues) {
+        $record = $revenues->firstWhere(fn($r) => $r->branch === 'OTHER' && $r->date === $d);
+        return [
+            'date' => $d,
+            'amount' => $record ? round($record->total_amount, 2) : 0
+        ];
+    })->toArray();
+
+    return response()->json($chartData);
+}
+
+
+   /* public function monthlyBranchRevenue()
+    {
+        $startDate = now()->subDays(30)->startOfDay();
+        $endDate = now()->endOfDay();
+
+        // Step 1: Fetch grouped revenue by branch and day
+        $revenues = DB::table('payments')
+            ->join('parcels', 'payments.parcel_id', '=', 'parcels.id')
+            ->selectRaw("
+                UPPER(
+                    CASE
+                        WHEN parcels.reference_number LIKE 'MBS%' THEN 'MBS'
+                        WHEN parcels.reference_number LIKE 'KSM%' THEN 'KSM'
+                        WHEN parcels.reference_number LIKE 'ELD%' THEN 'ELD'
+                        WHEN parcels.reference_number LIKE 'NAI%' THEN 'NAI'
+                        ELSE 'OTHER'
+                    END
+                ) AS branch,
+                DATE(payments.payment_date) AS date,
+                SUM(payments.amount) AS total_amount
+            ")
+            ->whereBetween('payments.payment_date', [$startDate, $endDate])
+            ->groupBy('branch', 'date')
+            ->orderBy('date')
+            ->get();
+
+        // Step 2: Generate a full date range for the last 30 days
+        $dates = [];
+        $date = $startDate->copy();
+        while ($date <= $endDate) {
+            $dates[] = $date->format('Y-m-d');
+            $date->addDay();
+        }
+
+        // Step 3: Structure data by branch
+        $chartData = [];
+        $branches = ['MBS', 'KSM', 'ELD', 'NAI', 'OTHER'];
+
+        foreach ($branches as $branch) {
+            // Initialize with 0 for each date
+            $chartData[$branch] = collect($dates)->map(function ($d) use ($branch, $revenues) {
+                $record = $revenues->firstWhere(fn($r) => $r->branch === $branch && $r->date === $d);
+                return [
+                    'date' => $d,
+                    'amount' => $record ? round($record->total_amount, 2) : 0
+                ];
+            })->toArray();
+        }
+
+        return response()->json($chartData);
+    }
+*/
 }
