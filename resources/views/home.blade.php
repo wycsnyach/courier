@@ -13,8 +13,8 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="row g-3">
-        <!-- Users -->
+<!--     <div class="row g-3">
+       
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             <div class="ibox">
                 <div class="ibox-title">
@@ -31,7 +31,6 @@
             </div>
         </div>
 
-        <!-- Branches -->
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             <div class="ibox">
                 <div class="ibox-title">
@@ -47,7 +46,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Parcel Status Cards -->
     <div class="row m-b-md mt-4">
