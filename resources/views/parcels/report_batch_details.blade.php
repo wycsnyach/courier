@@ -25,7 +25,7 @@
         <div class="ibox-title">
             <h5>Batch Details - {{ $batch->batch_number }}</h5>
             <div class="ibox-tools">
-                <a href="{{ url('all-batches') }}" class="btn btn-danger btn-xs active">
+                <a href="{{ url('report-all-batches') }}" class="btn btn-danger btn-xs active">
                     Back <i class="fa fa-level-up"></i>
                 </a>
             </div>

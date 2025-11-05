@@ -47,7 +47,7 @@ Route::group( ['middleware' => 'auth' ], function()
 
     Route::resource('branches',  App\Http\Controllers\BranchController::class);
    
-    Route::resource('payments',  App\Http\Controllers\PaymentController::class);
+ 
     
     Route::get('/generate-reference/{branchId}', [App\Http\Controllers\ParcelController::class, 'generateReference'])
      ->name('generate.reference');
@@ -57,6 +57,9 @@ Route::group( ['middleware' => 'auth' ], function()
     Route::get('/parcels/batch/{id}', [App\Http\Controllers\ParcelController::class, 'showBatchDetails'])->name('parcels.batchDetails');
     Route::get('batches', [App\Http\Controllers\ParcelController::class, 'listBatches'])->name('parcels.batchList');
     Route::get('all-batches', [App\Http\Controllers\ParcelController::class, 'allBatches'])->name('parcels.allBatches');
+
+    Route::get('report-all-batches', [App\Http\Controllers\ParcelController::class, 'reportallBatches'])->name('parcels.reportallBatches');
+    Route::get('/allparcels/batch/{id}', [App\Http\Controllers\ParcelController::class, 'reportshowBatchDetails'])->name('parcels.reportbatchDetails');
 
     Route::get('batch-delivery', [App\Http\Controllers\ParcelController::class, 'batchDelivery'])->name('parcels.batchDelivery');
     // Batch Delivery History
@@ -88,7 +91,16 @@ Route::group( ['middleware' => 'auth' ], function()
     Route::post('/settings', [App\Http\Controllers\SettingController::class, 'store'])->name('settings.store');
 
 
+    Route::get('monthly-branch-revenue', [App\Http\Controllers\PaymentController::class, 'monthlyBranchRevenue']);
+    Route::get('revenue-chart', function () {
+    $branches = DB::table('branches')->pluck('branch_code');
+    return view('payments.revenue_chart', compact('branches'));
+    });
+
+
+
     Route::get('/payments/{payment_id}/history', [App\Http\Controllers\PaymentController::class, 'paymentHistory'])->name('payments.history');
+    Route::resource('payments',  App\Http\Controllers\PaymentController::class);
 
     Route::get('/get-parcel-price/{parcel_id}', [App\Http\Controllers\PaymentController::class, 'getParcelPrice']);
     
